@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 from .const import (
+    ATTR_STATE_CHARGING,
     DOMAIN,
     NAME,
     VERSION,
@@ -48,6 +49,7 @@ from .const import (
     ATTR_UNIT_ID,
     ATTR_STATE_RANKING,
     ATTR_STATE,
+    ATTR_STATE_WAITING,
 )
 
 
@@ -75,10 +77,14 @@ class PodPointEntity(CoordinatorEntity):
 
     @property
     def device_info(self):
+        name = NAME
+        if len(self.psl) > 0:
+            name = self.psl
+
         return {
             "identifiers": {(DOMAIN, self.unique_id)},
-            "name": NAME,
-            "model": VERSION,
+            "name": name,
+            "model": self.model,
             "manufacturer": NAME,
         }
 
@@ -96,6 +102,7 @@ class PodPointEntity(CoordinatorEntity):
             "attribution": ATTRIBUTION,
             "id": str(data.get("id")),
             "integration": DOMAIN,
+            "suggested_area": "Outside",
         }
 
         state = None
@@ -175,6 +182,22 @@ class PodPointEntity(CoordinatorEntity):
                         f"{connector_prefix}_{i}", connector_object.get("connector", {})
                     )
                     attrs.update(connector_attributes)
+
+        _LOGGER.debug(state)
+        _LOGGER.debug(f"Charging allowed: {self.charging_allowed}")
+
+        is_charging_state = state == ATTR_STATE_CHARGING
+        charging_not_allowed = self.charging_allowed is False
+        should_be_waiting_state = is_charging_state and charging_not_allowed
+
+        _LOGGER.debug(f"Is charging state: {is_charging_state}")
+        _LOGGER.debug(f"Charging not allowed: {charging_not_allowed}")
+        _LOGGER.debug(f"Should be waiting state: {should_be_waiting_state}")
+
+        if should_be_waiting_state:
+            state = ATTR_STATE_WAITING
+
+        _LOGGER.info(f"Computed state: {state}")
 
         attrs[ATTR_STATE] = state
         return attrs
@@ -281,6 +304,16 @@ class PodPointEntity(CoordinatorEntity):
         """Return the unit id - used for schedule updates"""
         return self.extra_state_attributes[ATTR_UNIT_ID]
 
+    @property
+    def psl(self):
+        """Return the PSL - used for identifying multiple pods"""
+        return self.extra_state_attributes.get(ATTR_PSL, "")
+
+    @property
+    def model(self):
+        """Return the model of our podpoint"""
+        return self.extra_state_attributes[ATTR_MODEL]
+
     def compare_state(self, state, pod_state):
         """Given two states, which one is most important"""
         ranking = ATTR_STATE_RANKING
@@ -288,6 +321,8 @@ class PodPointEntity(CoordinatorEntity):
         # If pod state is None, but state is set, return the state
         if pod_state is None and state is not None:
             return state
+        elif state is None and pod_state is not None:
+            return pod_state
 
         try:
             state_rank = ranking.index(state)
@@ -297,9 +332,12 @@ class PodPointEntity(CoordinatorEntity):
         try:
             pod_rank = ranking.index(pod_state)
         except ValueError:
+
             pod_rank = 100
 
         winner = state if state_rank >= pod_rank else pod_state
+
+        _LOGGER.debug(f"Winning state: {winner} from {state} and {pod_state}")
 
         return winner
 

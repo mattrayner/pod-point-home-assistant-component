@@ -54,8 +54,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    for pod in coordinator.data:
-        for platform in PLATFORMS:
+    for platform in PLATFORMS:
+        for pod in coordinator.data:
             if entry.options.get(platform, True):
                 coordinator.platforms.append(platform)
                 hass.async_add_job(

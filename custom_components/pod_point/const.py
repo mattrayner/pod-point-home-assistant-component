@@ -9,6 +9,7 @@ ISSUE_URL = "https://github.com/mattrayner/pod-point-home-assistant-component/is
 
 # Icons
 ICON = "mdi:ev-plug-type2"
+SWITCH_ICON = "mdi:ev-station"
 
 # Device classes
 BINARY_SENSOR_DEVICE_CLASS = "plug"
@@ -26,9 +27,6 @@ CONF_PASSWORD = "password"
 
 # Defaults
 DEFAULT_NAME = DOMAIN
-
-# Flags
-CHARGING_FLAG = "Charging"
 
 # State attributes
 ATTR_ID = "pod_id"
@@ -68,7 +66,20 @@ ATTR_CONNECTOR_SOCKET_OCPP_NAME = "ocpp_name"
 ATTR_CONNECTOR_SOCKET_OCPP_CODE = "ocpp_code"
 ATTR_STATE = "state"
 
-ATTR_STATE_RANKING = ["available", "unavailable", "charging", "out-of-service"]
+ATTR_STATE_AVAILABLE = "available"
+ATTR_STATE_UNAVAILABLE = "unavailable"
+ATTR_STATE_CHARGING = "charging"
+ATTR_STATE_OUT_OF_SERVICE = "out-of-service"
+ATTR_STATE_WAITING = "waiting-for-schedule"
+ATTR_STATE_RANKING = [
+    ATTR_STATE_AVAILABLE,
+    ATTR_STATE_UNAVAILABLE,
+    ATTR_STATE_CHARGING,
+    ATTR_STATE_OUT_OF_SERVICE,
+]
+
+# Flags
+CHARGING_FLAG = ATTR_STATE_CHARGING
 
 # API Details
 BASE_API_VERSION = "v4"

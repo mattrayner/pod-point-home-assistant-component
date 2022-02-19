@@ -2,7 +2,7 @@
 from homeassistant.components.switch import SwitchEntity
 
 import logging
-from .const import DEFAULT_NAME, DOMAIN, ICON, SWITCH
+from .const import DEFAULT_NAME, DOMAIN, ICON, SWITCH, SWITCH_ICON
 from .entity import PodPointEntity
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -37,12 +37,12 @@ class PodPointBinarySwitch(PodPointEntity, SwitchEntity):
     @property
     def name(self):
         """Return the name of the switch."""
-        return f"{DEFAULT_NAME}_{SWITCH}"
+        return "Charging Allowed"
 
     @property
     def icon(self):
         """Return the icon of this switch."""
-        return ICON
+        return SWITCH_ICON
 
     @property
     def is_on(self):

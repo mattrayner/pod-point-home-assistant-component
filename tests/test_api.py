@@ -43,8 +43,8 @@ async def test_api(hass, aioclient_mock, caplog):
         "https://api.pod-point.com/v4/users/1234/pods?perpage=all&include=statuses,price,model,unit_connectors,charge_schedules",
         json=success_fixture,
     )
-
-    assert await api.async_get_pods() == {
+    response = await api.async_get_pods()
+    assert await response.json() == {
         "meta": {
             "pagination": {
                 "current_page": 1,

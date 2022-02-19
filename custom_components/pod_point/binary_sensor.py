@@ -7,6 +7,7 @@ from custom_components.pod_point.errors import PodPointSessionError
 
 from .const import (
     ATTR_STATE,
+    ATTR_STATE_WAITING,
     BINARY_SENSOR,
     BINARY_SENSOR_DEVICE_CLASS,
     DEFAULT_NAME,
@@ -49,7 +50,7 @@ class PodPointBinarySensor(PodPointEntity, BinarySensorEntity):
         """Return true if the binary_sensor is on."""
         status = self.extra_state_attributes.get(ATTR_STATE, "")
 
-        _LOGGER.debug(CHARGING_FLAG)
-        _LOGGER.debug(status)
+        _LOGGER.debug(f"Looking for flag '{CHARGING_FLAG}' or '{ATTR_STATE_WAITING}'")
+        _LOGGER.debug(f"Got state '{status}'")
 
-        return status == CHARGING_FLAG
+        return status in (CHARGING_FLAG, ATTR_STATE_WAITING)

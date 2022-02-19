@@ -31,7 +31,7 @@ class PodPointSensor(
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{DEFAULT_NAME}_{SENSOR}"
+        return f"Pod Status"
 
     @property
     def native_value(self):
