@@ -2,16 +2,17 @@
     "config": {
         "step": {
             "user": {
-                "title": "Blueprint",
-                "description": "If you need help with the configuration have a look here: https://github.com/custom-components/integration_blueprint",
+                "title": "Pod Point",
+                "description": "Please enter the email and password that you use to login to the Pod Point mobile app.",
                 "data": {
-                    "username": "Username",
+                    "email": "Email address",
                     "password": "Password"
                 }
             }
         },
         "error": {
-            "auth": "Username/Password is wrong."
+            "auth": "Email/Password authentication failed.",
+            "session": "Unable to create a user session. Please try again later."
         },
         "abort": {
             "single_instance_allowed": "Only a single instance is allowed."

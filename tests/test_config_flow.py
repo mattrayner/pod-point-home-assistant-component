@@ -5,7 +5,7 @@ from homeassistant import config_entries, data_entry_flow
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.integration_blueprint.const import (
+from custom_components.pod_point.const import (
     BINARY_SENSOR,
     DOMAIN,
     PLATFORMS,
@@ -22,11 +22,8 @@ from .const import MOCK_CONFIG
 @pytest.fixture(autouse=True)
 def bypass_setup_fixture():
     """Prevent setup."""
-    with patch(
-        "custom_components.integration_blueprint.async_setup",
-        return_value=True,
-    ), patch(
-        "custom_components.integration_blueprint.async_setup_entry",
+    with patch("custom_components.pod_point.async_setup", return_value=True,), patch(
+        "custom_components.pod_point.async_setup_entry",
         return_value=True,
     ):
         yield
@@ -55,7 +52,7 @@ async def test_successful_config_flow(hass, bypass_get_data):
     # Check that the config flow is complete and a new entry is created with
     # the input data
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "test_username"
+    assert result["title"] == "test@example.com"
     assert result["data"] == MOCK_CONFIG
     assert result["result"]
 
@@ -104,7 +101,7 @@ async def test_options_flow(hass):
 
     # Verify that the flow finishes
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "test_username"
+    assert result["title"] == "test@example.com"
 
     # Verify that the options were updated
     assert entry.options == {BINARY_SENSOR: True, SENSOR: False, SWITCH: True}

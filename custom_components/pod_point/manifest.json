@@ -1,0 +1,12 @@
+{
+  "domain": "pod_point",
+  "name": "Pod Point",
+  "documentation": "https://github.com/mattrayner/pod-point-home-assistant-component",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/mattrayner/pod-point-home-assistant-component/issues",
+  "version": "0.0.1",
+  "config_flow": true,
+  "codeowners": [
+    "@mattrayner"
+  ]
+}

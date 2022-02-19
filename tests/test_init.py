@@ -3,13 +3,13 @@ from homeassistant.exceptions import ConfigEntryNotReady
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.integration_blueprint import (
-    BlueprintDataUpdateCoordinator,
+from custom_components.pod_point import (
+    PodPointDataUpdateCoordinator,
     async_reload_entry,
     async_setup_entry,
     async_unload_entry,
 )
-from custom_components.integration_blueprint.const import DOMAIN
+from custom_components.pod_point.const import DOMAIN
 
 from .const import MOCK_CONFIG
 
@@ -30,14 +30,14 @@ async def test_setup_unload_and_reload_entry(hass, bypass_get_data):
     assert await async_setup_entry(hass, config_entry)
     assert DOMAIN in hass.data and config_entry.entry_id in hass.data[DOMAIN]
     assert (
-        type(hass.data[DOMAIN][config_entry.entry_id]) == BlueprintDataUpdateCoordinator
+        type(hass.data[DOMAIN][config_entry.entry_id]) == PodPointDataUpdateCoordinator
     )
 
     # Reload the entry and assert that the data from above is still there
     assert await async_reload_entry(hass, config_entry) is None
     assert DOMAIN in hass.data and config_entry.entry_id in hass.data[DOMAIN]
     assert (
-        type(hass.data[DOMAIN][config_entry.entry_id]) == BlueprintDataUpdateCoordinator
+        type(hass.data[DOMAIN][config_entry.entry_id]) == PodPointDataUpdateCoordinator
     )
 
     # Unload the entry and verify that the data has been removed

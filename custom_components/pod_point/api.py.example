@@ -8,7 +8,6 @@ import async_timeout
 
 TIMEOUT = 10
 
-
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 HEADERS = {"Content-type": "application/json; charset=UTF-8"}

@@ -1,22 +1,37 @@
 """Binary sensor platform for integration_blueprint."""
+import logging
+from typing import ClassVar
 from homeassistant.components.binary_sensor import BinarySensorEntity
 
+from custom_components.pod_point.errors import PodPointSessionError
+
 from .const import (
+    ATTR_STATE,
     BINARY_SENSOR,
     BINARY_SENSOR_DEVICE_CLASS,
     DEFAULT_NAME,
     DOMAIN,
+    CHARGING_FLAG,
 )
-from .entity import IntegrationBlueprintEntity
+from .entity import PodPointEntity
+
+_LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
 async def async_setup_entry(hass, entry, async_add_devices):
     """Setup binary_sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_devices([IntegrationBlueprintBinarySensor(coordinator, entry)])
+
+    sensors = []
+    for i in range(len(coordinator.data)):
+        sensor = PodPointBinarySensor(coordinator, entry)
+        sensor.pod_id = i
+        sensors.append(sensor)
+
+    async_add_devices([sensor])
 
 
-class IntegrationBlueprintBinarySensor(IntegrationBlueprintEntity, BinarySensorEntity):
+class PodPointBinarySensor(PodPointEntity, BinarySensorEntity):
     """integration_blueprint binary_sensor class."""
 
     @property
@@ -32,4 +47,9 @@ class IntegrationBlueprintBinarySensor(IntegrationBlueprintEntity, BinarySensorE
     @property
     def is_on(self):
         """Return true if the binary_sensor is on."""
-        return self.coordinator.data.get("title", "") == "foo"
+        status = self.extra_state_attributes.get(ATTR_STATE, "")
+
+        _LOGGER.debug(CHARGING_FLAG)
+        _LOGGER.debug(status)
+
+        return status == CHARGING_FLAG

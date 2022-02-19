@@ -14,17 +14,17 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import IntegrationBlueprintApiClient
+from .api import PodPointApiClient
 
 from .const import (
     CONF_PASSWORD,
-    CONF_USERNAME,
+    CONF_EMAIL,
     DOMAIN,
     PLATFORMS,
     STARTUP_MESSAGE,
 )
 
-SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(minutes=5)
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -40,13 +40,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data.setdefault(DOMAIN, {})
         _LOGGER.info(STARTUP_MESSAGE)
 
-    username = entry.data.get(CONF_USERNAME)
+    email = entry.data.get(CONF_EMAIL)
     password = entry.data.get(CONF_PASSWORD)
 
     session = async_get_clientsession(hass)
-    client = IntegrationBlueprintApiClient(username, password, session)
+    client = PodPointApiClient(email, password, session)
 
-    coordinator = BlueprintDataUpdateCoordinator(hass, client=client)
+    coordinator = PodPointDataUpdateCoordinator(hass, client=client)
     await coordinator.async_refresh()
 
     if not coordinator.last_update_success:
@@ -54,23 +54,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    for platform in PLATFORMS:
-        if entry.options.get(platform, True):
-            coordinator.platforms.append(platform)
-            hass.async_add_job(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-            )
+    for pod in coordinator.data:
+        for platform in PLATFORMS:
+            if entry.options.get(platform, True):
+                coordinator.platforms.append(platform)
+                hass.async_add_job(
+                    hass.config_entries.async_forward_entry_setup(entry, platform)
+                )
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     return True
 
 
-class BlueprintDataUpdateCoordinator(DataUpdateCoordinator):
+class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the API."""
 
-    def __init__(
-        self, hass: HomeAssistant, client: IntegrationBlueprintApiClient
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, client: PodPointApiClient) -> None:
         """Initialize."""
         self.api = client
         self.platforms = []
@@ -80,8 +79,14 @@ class BlueprintDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update data via library."""
         try:
-            return await self.api.async_get_data()
+            response = await self.api.async_get_pods()
+
+            _LOGGER.debug(response)
+
+            json = await response.json()
+            return json.get("pods", [])
         except Exception as exception:
+            _LOGGER.error(exception)
             raise UpdateFailed() from exception
 
 

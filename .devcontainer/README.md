@@ -1,4 +1,4 @@
-## Developing with Visual Studio Code + devcontainer
+  ## Developing with Visual Studio Code + devcontainer
 
 The easiest way to get started with custom integration development is to use Visual Studio Code with devcontainers. This approach will create a preconfigured development environment with all the tools you need.
 
