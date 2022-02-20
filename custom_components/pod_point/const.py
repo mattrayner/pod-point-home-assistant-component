@@ -65,6 +65,7 @@ ATTR_CONNECTOR_SOCKET_TYPE = "type"
 ATTR_CONNECTOR_SOCKET_OCPP_NAME = "ocpp_name"
 ATTR_CONNECTOR_SOCKET_OCPP_CODE = "ocpp_code"
 ATTR_STATE = "state"
+ATTR_IMAGE = "local_image"
 
 ATTR_STATE_AVAILABLE = "available"
 ATTR_STATE_UNAVAILABLE = "unavailable"
@@ -84,6 +85,9 @@ CHARGING_FLAG = ATTR_STATE_CHARGING
 # API Details
 BASE_API_VERSION = "v4"
 BASE_API_URL = "https://api.pod-point.com/" + BASE_API_VERSION
+
+# Image serving
+APP_IMAGE_URL_BASE = f"/api/{DOMAIN}/static"
 
 STARTUP_MESSAGE = f"""
 -------------------------------------------------------------------

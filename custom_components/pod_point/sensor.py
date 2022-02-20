@@ -3,7 +3,7 @@ import logging
 from typing_extensions import Self
 from homeassistant.components.sensor import SensorEntity
 
-from .const import ATTR_STATE, DEFAULT_NAME, DOMAIN, ICON, SENSOR
+from .const import ATTR_STATE, DEFAULT_NAME, DOMAIN, ICON, SENSOR, ATTR_IMAGE
 from .entity import PodPointEntity
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -44,3 +44,7 @@ class PodPointSensor(
     def icon(self):
         """Return the icon of the sensor."""
         return ICON
+
+    @property
+    def entity_picture(self) -> str:
+        return self.image

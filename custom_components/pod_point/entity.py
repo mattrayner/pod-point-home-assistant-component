@@ -50,6 +50,8 @@ from .const import (
     ATTR_STATE_RANKING,
     ATTR_STATE,
     ATTR_STATE_WAITING,
+    ATTR_IMAGE,
+    APP_IMAGE_URL_BASE,
 )
 
 
@@ -314,6 +316,11 @@ class PodPointEntity(CoordinatorEntity):
         """Return the model of our podpoint"""
         return self.extra_state_attributes[ATTR_MODEL]
 
+    @property
+    def image(self):
+        """Return the image url for this model"""
+        return self.__pod_image(self.model)
+
     def compare_state(self, state, pod_state):
         """Given two states, which one is most important"""
         ranking = ATTR_STATE_RANKING
@@ -390,3 +397,20 @@ class PodPointEntity(CoordinatorEntity):
             ] = socket_obj.get("ocpp_code", None)
 
         return attrs
+
+    def __pod_image(self, model):
+        if model is None:
+            return None
+
+        model_slug = model.upper()[3:8].split("-")
+        type = model_slug[0]
+        model_id = model_slug[1]
+
+        if type == "UP":
+            type = "UC"
+
+        img = type
+        if model_id == "03":
+            img = f"{type}-{model_id}"
+
+        return f"{APP_IMAGE_URL_BASE}/{img.lower()}.png"

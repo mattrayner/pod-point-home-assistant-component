@@ -7,6 +7,7 @@ https://github.com/custom-components/integration_blueprint
 import asyncio
 from datetime import timedelta
 import logging
+from pathlib import Path
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Config, HomeAssistant
@@ -17,6 +18,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .api import PodPointApiClient
 
 from .const import (
+    APP_IMAGE_URL_BASE,
     CONF_PASSWORD,
     CONF_EMAIL,
     DOMAIN,
@@ -52,15 +54,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
 
+    should_cache = False
+    files_path = Path(__file__).parent / "static"
+    hass.http.register_static_path(APP_IMAGE_URL_BASE, str(files_path), should_cache)
+
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     for platform in PLATFORMS:
-        for pod in coordinator.data:
-            if entry.options.get(platform, True):
-                coordinator.platforms.append(platform)
-                hass.async_add_job(
-                    hass.config_entries.async_forward_entry_setup(entry, platform)
-                )
+        if entry.options.get(platform, True):
+            coordinator.platforms.append(platform)
+            hass.async_add_job(
+                hass.config_entries.async_forward_entry_setup(entry, platform)
+            )
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     return True

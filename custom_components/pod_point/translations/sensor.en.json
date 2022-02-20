@@ -2,7 +2,7 @@
     "state": {
         "_": {
             "charging": "Charging",
-            "avaialble": "Available",
+            "available": "Available",
             "unavailable": "Unavailable",
             "out-of-service": "Out of service",
             "waiting-for-schedule": "Waiting for schedule"
