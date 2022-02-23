@@ -402,15 +402,21 @@ class PodPointEntity(CoordinatorEntity):
         if model is None:
             return None
 
-        model_slug = model.upper()[3:8].split("-")
-        type = model_slug[0]
+        model_slug = self.__model_slug()
+        model_type = model_slug[0]
         model_id = model_slug[1]
 
-        if type == "UP":
-            type = "UC"
+        if model_type == "UP":
+            model_type = "UC"
 
-        img = type
+        if model_type == "1C":
+            model_type = "2C"
+
+        img = model_type
         if model_id == "03":
-            img = f"{type}-{model_id}"
+            img = f"{model_type}-{model_id}"
 
         return f"{APP_IMAGE_URL_BASE}/{img.lower()}.png"
+
+    def __model_slug(self) -> list[str]:
+        return self.model.upper()[3:8].split("-")

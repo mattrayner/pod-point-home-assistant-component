@@ -8,8 +8,12 @@ ATTRIBUTION = "Data provided by https://pod-point.com/"
 ISSUE_URL = "https://github.com/mattrayner/pod-point-home-assistant-component/issues"
 
 # Icons
-ICON = "mdi:ev-plug-type2"
-SWITCH_ICON = "mdi:ev-station"
+ICON = "mdi:ev-plug-mennekes"
+ICON_1C = "mdi:ev-plug-type1"
+ICON_2C = "mdi:ev-plug-type2"
+ICON_EV_STATION = "mdi:ev-station"
+
+SWITCH_ICON = ICON_EV_STATION
 
 # Device classes
 BINARY_SENSOR_DEVICE_CLASS = "plug"
