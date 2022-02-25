@@ -56,7 +56,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     should_cache = False
     files_path = Path(__file__).parent / "static"
-    hass.http.register_static_path(APP_IMAGE_URL_BASE, str(files_path), should_cache)
+    if hass.http:
+        hass.http.register_static_path(APP_IMAGE_URL_BASE, str(files_path), should_cache)
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
