@@ -58,11 +58,11 @@ Solo 3 Tethered | /api/pod_point/static/2c-03.png
 ```yaml
 type: entities
 entities:
-  - entity: sensor.pod_point_sensor
+  - entity: sensor.pod_status
     name: Status
-  - entity: binary_sensor.pod_point_binary_sensor
+  - entity: binary_sensor.cable_status
     name: Cable
-  - entity: switch.pod_point_switch
+  - entity: switch.charging_allowed
 title: Pod Point
 header:
   type: picture

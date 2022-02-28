@@ -85,9 +85,9 @@ class PodPointApiClient:
         self,
         method: str,
         url: str,
-        data: dict = {},
-        headers: dict = {},
-        params: dict = {},
+        data: dict = None,
+        headers: dict = None,
+        params: dict = None,
     ) -> dict:
         """Get information from the API."""
         try:
@@ -127,6 +127,7 @@ class PodPointApiClient:
             _LOGGER.error("Something really wrong happened! - %s", exception)
 
     async def async_check_access_token(self) -> bool:
+        """Check the access token we have and if necessary, update it."""
         access_token_set = (
             self._access_token is not None and self._access_token_expiration is not None
         )
