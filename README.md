@@ -26,9 +26,9 @@ Platform | Description
 
 ### HACS (recommended)
 
-You can install this component via HACS by adding [pod-point-home-assistant-component][pod_point] as a [custom respository][hacs-add-repo]. Then install it from the main HACS integration screen.
+You can install this component via HACS by searching for 'Pod Point' and then install it from the main HACS integration screen.
 
-Installing via HACS as shown above will allow you to get updates as this component is updated.
+_Note: You will need to restart before you can install Pod Point via the UI._ Within Home Assistant go to "Configuration" -> "Integrations" click "+" and search for "Pod Point".
 
 
 ### Manually
@@ -95,7 +95,7 @@ entities:
 title: Pod Point
 header:
   type: picture
-  image: /api/pod_point/static/uc-03.png # See above options for per-model alternatives
+  image: /api/pod_point/static/uc-03.png # See above for options per-model
   tap_action:
     action: none
   hold_action:
@@ -116,7 +116,7 @@ If you want to contribute to this please read the [Contribution guidelines](CONT
 [commits-shield]: https://img.shields.io/github/commit-activity/y/mattrayner/pod-point-home-assistant-component.svg?style=for-the-badge
 [commits]: https://github.com/mattrayner/pod-point-home-assistant-component/commits/master
 [hacs]: https://github.com/custom-components/hacs
-[hacsbadge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
+[hacsbadge]: https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge
 [exampleimg]: https://github.com/mattrayner/pod-point-home-assistant-component/raw/ef2c39788cdcd85d08a9adab1c06d74c51d38993/example.png
 [whichpodimg]: https://github.com/mattrayner/pod-point-home-assistant-component/raw/ef2c39788cdcd85d08a9adab1c06d74c51d38993/which_pod.png
 [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge
