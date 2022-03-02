@@ -7,10 +7,10 @@ from datetime import datetime, timedelta
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 from .const import (
+    ATTR_STATE_AVAILABLE,
     ATTR_STATE_CHARGING,
     DOMAIN,
     NAME,
-    VERSION,
     ATTRIBUTION,
     ATTR_COMMISSIONED,
     ATTR_CONNECTOR,
@@ -50,7 +50,7 @@ from .const import (
     ATTR_STATE_RANKING,
     ATTR_STATE,
     ATTR_STATE_WAITING,
-    ATTR_IMAGE,
+    ATTR_STATE_CONNECTED_WAITING,
     APP_IMAGE_URL_BASE,
 )
 
@@ -186,20 +186,25 @@ class PodPointEntity(CoordinatorEntity):
                     attrs.update(connector_attributes)
 
         _LOGGER.debug(state)
-        _LOGGER.debug(f"Charging allowed: {self.charging_allowed}")
+        _LOGGER.debug("Charging allowed: %s", self.charging_allowed)
 
+        is_available_state = state == ATTR_STATE_AVAILABLE
         is_charging_state = state == ATTR_STATE_CHARGING
         charging_not_allowed = self.charging_allowed is False
-        should_be_waiting_state = is_charging_state and charging_not_allowed
+        should_be_waiting_state = is_available_state and charging_not_allowed
+        should_be_connected_waiting_state = is_charging_state and charging_not_allowed
 
-        _LOGGER.debug(f"Is charging state: {is_charging_state}")
-        _LOGGER.debug(f"Charging not allowed: {charging_not_allowed}")
-        _LOGGER.debug(f"Should be waiting state: {should_be_waiting_state}")
+        _LOGGER.debug("Is charging state: %s", is_charging_state)
+        _LOGGER.debug("Charging not allowed: %s", charging_not_allowed)
+        _LOGGER.debug("Should be waiting state: %s", should_be_waiting_state)
 
         if should_be_waiting_state:
             state = ATTR_STATE_WAITING
 
-        _LOGGER.info(f"Computed state: {state}")
+        if should_be_connected_waiting_state:
+            state = ATTR_STATE_CONNECTED_WAITING
+
+        _LOGGER.info("Computed state: %s", state)
 
         attrs[ATTR_STATE] = state
         return attrs
@@ -229,8 +234,8 @@ class PodPointEntity(CoordinatorEntity):
             None,
         )
 
-        _LOGGER.debug(f"Weekday {weekday}")
-        _LOGGER.debug(f"Schedule for day:")
+        _LOGGER.debug("Weekday %s", weekday)
+        _LOGGER.debug("Schedule for day:")
         _LOGGER.debug(schedule_for_day)
 
         # If no schedule is set for our day, return False early, there should always be a
@@ -244,7 +249,7 @@ class PodPointEntity(CoordinatorEntity):
         if schedule_active is None:
             return False
 
-        _LOGGER.debug(f"Schedule active: {schedule_active}")
+        _LOGGER.debug("Schedule active: %s", schedule_active)
 
         # If the schedule for this day is not active, we can charge
         if schedule_active is False:
@@ -260,7 +265,7 @@ class PodPointEntity(CoordinatorEntity):
             hour=start_time[0], minute=start_time[1], second=start_time[2]
         )
 
-        _LOGGER.debug(f"start: {start_date}")
+        _LOGGER.debug("start: %s", start_date)
 
         end_time = list(
             map(lambda x: int(x), schedule_for_day.get("end_time", "0:0:0").split(":"))
@@ -277,7 +282,7 @@ class PodPointEntity(CoordinatorEntity):
             day_offset = (7 - weekday) + (end_day - 1)
             end_date = end_time + timedelta(days=day_offset)
         elif end_day > weekday:
-            offset = end_day - weekday
+            day_offset = end_day - weekday
 
             end_time = end_date = datetime.now().replace(
                 hour=end_time[0], minute=end_time[1], second=end_time[2]
@@ -288,7 +293,7 @@ class PodPointEntity(CoordinatorEntity):
                 hour=end_time[0], minute=end_time[1], second=end_time[2]
             )
 
-        _LOGGER.debug(f"end: {end_date}")
+        _LOGGER.debug("end: %s", end_date)
 
         # Problem creating the end_date, so we will exit with False
         if end_date is None:
@@ -296,7 +301,7 @@ class PodPointEntity(CoordinatorEntity):
 
         in_range = start_date <= datetime.now() <= end_date
 
-        _LOGGER.debug(f"in range: {in_range}")
+        _LOGGER.debug(f"in range: %s", in_range)
 
         # Are we within the range for today?
         return in_range
@@ -344,7 +349,7 @@ class PodPointEntity(CoordinatorEntity):
 
         winner = state if state_rank >= pod_rank else pod_state
 
-        _LOGGER.debug(f"Winning state: {winner} from {state} and {pod_state}")
+        _LOGGER.debug("Winning state: %s from %s and %s", winner, state, pod_state)
 
         return winner
 

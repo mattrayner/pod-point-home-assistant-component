@@ -76,6 +76,7 @@ ATTR_STATE_UNAVAILABLE = "unavailable"
 ATTR_STATE_CHARGING = "charging"
 ATTR_STATE_OUT_OF_SERVICE = "out-of-service"
 ATTR_STATE_WAITING = "waiting-for-schedule"
+ATTR_STATE_CONNECTED_WAITING = "connected-waiting-for-schedule"
 ATTR_STATE_RANKING = [
     ATTR_STATE_AVAILABLE,
     ATTR_STATE_UNAVAILABLE,

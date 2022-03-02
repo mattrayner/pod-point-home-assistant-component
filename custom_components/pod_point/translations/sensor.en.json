@@ -5,7 +5,8 @@
             "available": "Available",
             "unavailable": "Unavailable",
             "out-of-service": "Out of service",
-            "waiting-for-schedule": "Waiting for schedule"
+            "waiting-for-schedule": "Waiting for schedule",
+            "connected-waiting-for-schedule": "Connected - Waiting for schedule"
         }
     }
 }
