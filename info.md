@@ -34,6 +34,19 @@ Platform | Description
 
 Once you have installed either manually or via HACS, restart your home assistant instance and then setup the component by choosing 'Add integration' and search for 'Pod Point.
 
+## Satuses
+
+Multiple statuses are reported by the main pod sensor. The statuses and their meaning are shown below:
+
+status | description
+---|---
+available | The pod is available for charging. Connecting a vehicle will begin a charging session.
+unavailable | The pod is unavailable for charging.
+charging | Vehicle is connected and charging is possible. Note: If you car has completed charging but it still connected to the pod, the status will remain as 'connected'.
+out-of-service | This pod is not in service. Reach out to Pod Point for more information.
+waiting-for-schedule | Pod charging is currently blocked by schedule. Connecting your vehicle will *not* begin charging.
+connected-waiting-for-schedule | Your vehicle is connected to the pod but charging is currently prevented due to a schedule.
+
 ## Lovelace examples
 
 ### Header Images
