@@ -11,7 +11,7 @@
   ],
   "requirements": [
     "podpointclient==0.0.9",
-    "StrEnum==0.4.*"
+    "StrEnum>=0.4,<0.5"
   ],
   "quality_scale": "silver"
 }

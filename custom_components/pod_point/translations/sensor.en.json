@@ -1,6 +1,6 @@
 {
     "state": {
-        "_": {
+        "pod_point__": {
             "charging": "Charging",
             "available": "Available",
             "unavailable": "Unavailable",
