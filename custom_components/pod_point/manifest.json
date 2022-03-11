@@ -8,5 +8,10 @@
   "config_flow": true,
   "codeowners": [
     "@mattrayner"
-  ]
+  ],
+  "requirements": [
+    "podpointclient==0.0.9",
+    "StrEnum==0.4.*"
+  ],
+  "quality_scale": "silver"
 }

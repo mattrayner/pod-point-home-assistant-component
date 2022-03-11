@@ -1,0 +1,2 @@
+podpointclient==0.0.9
+StrEnum

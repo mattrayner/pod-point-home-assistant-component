@@ -26,12 +26,17 @@ class PodPointBinarySwitch(PodPointEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs):  # pylint: disable=unused-argument
         """Allow charging (clear schedule)"""
-        await self.coordinator.api.async_set_schedule(False, self.unit_id)
+        _LOGGER.debug(type(self.pod))
+        _LOGGER.debug(self.pod)
+        await self.coordinator.api.async_set_schedule(False, self.pod)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):  # pylint: disable=unused-argument
         """Block charging (turn on schedule)"""
-        await self.coordinator.api.async_set_schedule(True, self.unit_id)
+        _LOGGER.debug(type(self.pod))
+        _LOGGER.debug(self.pod)
+
+        await self.coordinator.api.async_set_schedule(True, self.pod)
         await self.coordinator.async_request_refresh()
 
     @property

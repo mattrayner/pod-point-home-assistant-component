@@ -16,6 +16,10 @@
 # pytest includes fixtures OOB which you can use as defined on this page)
 from unittest.mock import patch
 
+from .fixtures import POD_COMPLETE_FIXTURE
+
+from podpointclient.factories import PodFactory
+
 import pytest
 
 pytest_plugins = "pytest_homeassistant_custom_component"
@@ -45,7 +49,18 @@ def skip_notifications_fixture():
 @pytest.fixture(name="bypass_get_data")
 def bypass_get_data_fixture():
     """Skip calls to get data from API."""
-    with patch("custom_components.pod_point.PodPointApiClient.async_get_pods"):
+
+    factory = PodFactory()
+    pods = factory.build_pods({"pods": [POD_COMPLETE_FIXTURE]})
+    pod = pods[0]
+
+    with patch(
+        "podpointclient.client.PodPointClient.async_get_pods", return_value=pods
+    ), patch(
+        "podpointclient.client.PodPointClient.async_get_pod", return_value=pod
+    ), patch(
+        "podpointclient.client.PodPointClient.async_set_schedule", return_value=True
+    ):
         yield
 
 
@@ -55,7 +70,7 @@ def bypass_get_data_fixture():
 def error_get_data_fixture():
     """Simulate error when retrieving data from API."""
     with patch(
-        "custom_components.pod_point.PodPointApiClient.async_get_pods",
+        "podpointclient.client.PodPointClient.async_get_pods",
         side_effect=Exception,
     ):
         yield

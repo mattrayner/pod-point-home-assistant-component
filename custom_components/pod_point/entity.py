@@ -1,8 +1,11 @@
 """PodPointEntity class"""
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, List
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.core import callback
 from datetime import datetime, timedelta
+from podpointclient.pod import Pod
+from podpointclient.schedule import Schedule
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -60,130 +63,27 @@ class PodPointEntity(CoordinatorEntity):
 
     def __init__(self, coordinator, config_entry):
         super().__init__(coordinator)
-        self._pod_id = None
+        self.pod_id = None
         self.config_entry = config_entry
+        self.extra_attrs = {}
 
-    @property
-    def pod_id(self):
-        """Set the pod index for this entity"""
-        return self._pod_id
+        self.__update_attrs
 
-    @pod_id.setter
-    def pod_id(self, pod_id):
-        self._pod_id = pod_id
-
-    @property
-    def unique_id(self):
-        """Return a unique ID to use for this entity."""
-        return self.config_entry.entry_id
-
-    @property
-    def device_info(self):
-        name = NAME
-        if len(self.psl) > 0:
-            name = self.psl
-
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": name,
-            "model": self.model,
-            "manufacturer": NAME,
-        }
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        # return {
-        #     "attribution": ATTRIBUTION,
-        #     "id": str(self.coordinator.data.get("id")),
-        #     "integration": DOMAIN,
-        # }
-        data = self.coordinator.data[self.pod_id]
+    def __update_attrs(self):
+        pod: Pod = self.pod
 
         attrs = {
             "attribution": ATTRIBUTION,
-            "id": str(data.get("id")),
+            "id": pod.id,
             "integration": DOMAIN,
             "suggested_area": "Outside",
         }
 
+        attrs.update(pod.dict)
+
         state = None
-
-        attrs[ATTR_ID] = data.get("id")
-        attrs[ATTR_PSL] = data.get("ppid", None)
-        attrs[ATTR_PAYG] = data.get("payg", None)
-        attrs[ATTR_HOME] = data.get("home", None)
-        attrs[ATTR_PUBLIC] = data.get("public", None)
-        attrs[ATTR_EVZONE] = data.get("evZone", None)
-        attrs[ATTR_COMMISSIONED] = data.get("commissioned_at", None)
-        attrs[ATTR_CREATED] = data.get("created_at", None)
-        attrs[ATTR_LAST_CONTACT] = data.get("last_contact_at", None)
-        attrs[ATTR_UNIT_ID] = data.get("unit_id", None)
-        attrs[ATTR_CONTACTLESS_ENABLED] = data.get("contactless_enabled", None)
-        attrs[ATTR_TIMEZONE] = data.get("timezone", None)
-        attrs[ATTR_PRICE] = data.get("price", None)
-
-        if data.get("location", False):
-            location_obj = data.get("location", {})
-            attrs[ATTR_LAT] = location_obj.get("lat", None)
-            attrs[ATTR_LNG] = location_obj.get("lng", None)
-
-        if data.get("model", False):
-            attrs[ATTR_MODEL] = data.get("model", {}).get("name", None)
-
-        statuses = data.get("statuses", [])
-        if len(statuses) > 0:
-            status_prefix = ATTR_STATUS
-
-            if len(statuses) == 1:
-                status_object = statuses[0]
-                status_attributes = self.__populate_status_attr(
-                    status_prefix, status_object
-                )
-                pod_state = status_attributes.get(
-                    f"{status_prefix}_{ATTR_STATUS_KEY_NAME}", None
-                )
-                _LOGGER.debug(status_attributes)
-                _LOGGER.debug(pod_state)
-                state = self.compare_state(
-                    state,
-                    pod_state,
-                )
-                attrs.update(status_attributes)
-            else:
-                for i in range(len(statuses)):
-                    status_obj = data.get("statuses", None)[i]
-                    status_attributes = self.__populate_status_attr(
-                        f"{status_prefix}_{i}", status_obj
-                    )
-                    pod_state = status_attributes.get(
-                        f"{status_prefix}_{i}_{ATTR_STATUS_KEY_NAME}", None
-                    )
-                    _LOGGER.debug(status_attributes)
-                    _LOGGER.debug(pod_state)
-                    state = self.compare_state(
-                        state,
-                        pod_state,
-                    )
-                    attrs.update(status_attributes)
-
-        connectors_list = data.get("unit_connectors", [])
-        if len(connectors_list) > 0:
-            connector_prefix = ATTR_CONNECTOR
-
-            if len(connectors_list) == 1:
-                connector_object = connectors_list[0].get("connector", {})
-                connector_attributes = self.__populate_connector_attr(
-                    connector_prefix, connector_object
-                )
-                attrs.update(connector_attributes)
-            else:
-                for i in range(len(connectors_list)):
-                    connector_object = connectors_list[i]
-                    connector_attributes = self.__populate_connector_attr(
-                        f"{connector_prefix}_{i}", connector_object.get("connector", {})
-                    )
-                    attrs.update(connector_attributes)
+        for status in pod.statuses:
+            state = self.compare_state(state, status.key_name)
 
         _LOGGER.debug(state)
         _LOGGER.debug("Charging allowed: %s", self.charging_allowed)
@@ -207,30 +107,66 @@ class PodPointEntity(CoordinatorEntity):
         _LOGGER.info("Computed state: %s", state)
 
         attrs[ATTR_STATE] = state
-        return attrs
+
+        self._attr_state = state
+
+        self.extra_attrs = attrs
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.__update_attrs()
+
+        self.async_write_ha_state()
 
     @property
-    def charging_allowed(self):
+    def pod(self) -> Pod:
+        pod: Pod = self.coordinator.data[self.pod_id]
+        return pod
+
+    @property
+    def unique_id(self):
+        """Return a unique ID to use for this entity."""
+        return self.config_entry.entry_id
+
+    @property
+    def device_info(self) -> Dict[str, Any]:
+        name = NAME
+        if len(self.psl) > 0:
+            name = self.psl
+
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": name,
+            "model": self.model,
+            "manufacturer": NAME,
+        }
+
+    @property
+    def extra_state_attributes(self) -> Dict[str, Any]:
+        """Return the state attributes."""
+        # return {
+        #     "attribution": ATTRIBUTION,
+        #     "id": str(self.coordinator.data.get("id")),
+        #     "integration": DOMAIN,
+        # }
+        return self.extra_attrs
+
+    @property
+    def charging_allowed(self) -> bool:
         """Is charging allowed by schedule?"""
         _LOGGER.info("Getting schedules")
 
-        schedules = self.coordinator.data[self.pod_id].get("charge_schedules", [])
-
-        _LOGGER.debug(schedules)
+        pod: Pod = self.coordinator.data[self.pod_id]
+        schedules: List[Schedule] = pod.charge_schedules
 
         # No schedules are found, we will assume we can charge
         if len(schedules) <= 0:
             return True
 
-        _LOGGER.debug("More than 0")
-
         weekday = datetime.today().weekday() + 1
-        schedule_for_day = next(
-            (
-                schedule
-                for schedule in schedules
-                if schedule.get("start_day", 100) == weekday
-            ),
+        schedule_for_day: Schedule = next(
+            (schedule for schedule in schedules if schedule.start_day == weekday),
             None,
         )
 
@@ -243,7 +179,7 @@ class PodPointEntity(CoordinatorEntity):
         if schedule_for_day is None:
             return False
 
-        schedule_active = schedule_for_day.get("status", {}).get("is_active", None)
+        schedule_active = schedule_for_day.is_active
 
         # If schedule_active is None, there was a problem. we will return False
         if schedule_active is None:
@@ -255,22 +191,15 @@ class PodPointEntity(CoordinatorEntity):
         if schedule_active is False:
             return True
 
-        start_time = list(
-            map(
-                lambda x: int(x), schedule_for_day.get("start_time", "0:0:0").split(":")
-            )
-        )
-
+        start_time = list(map(lambda x: int(x), schedule_for_day.start_time.split(":")))
         start_date = datetime.now().replace(
             hour=start_time[0], minute=start_time[1], second=start_time[2]
         )
 
         _LOGGER.debug("start: %s", start_date)
 
-        end_time = list(
-            map(lambda x: int(x), schedule_for_day.get("end_time", "0:0:0").split(":"))
-        )
-        end_day = schedule_for_day.get("end_day", weekday)
+        end_time = list(map(lambda x: int(x), schedule_for_day.end_time.split(":")))
+        end_day = schedule_for_day.end_day
         end_date = None
         if end_day < weekday:
             # roll into next week
@@ -307,26 +236,26 @@ class PodPointEntity(CoordinatorEntity):
         return in_range
 
     @property
-    def unit_id(self):
+    def unit_id(self) -> int:
         """Return the unit id - used for schedule updates"""
-        return self.extra_state_attributes[ATTR_UNIT_ID]
+        return self.pod.unit_id
 
     @property
-    def psl(self):
+    def psl(self) -> str:
         """Return the PSL - used for identifying multiple pods"""
-        return self.extra_state_attributes.get(ATTR_PSL, "")
+        return self.pod.ppid
 
     @property
-    def model(self):
+    def model(self) -> str:
         """Return the model of our podpoint"""
-        return self.extra_state_attributes[ATTR_MODEL]
+        return self.pod.model.name
 
     @property
-    def image(self):
+    def image(self) -> str:
         """Return the image url for this model"""
         return self.__pod_image(self.model)
 
-    def compare_state(self, state, pod_state):
+    def compare_state(self, state, pod_state) -> str:
         """Given two states, which one is most important"""
         ranking = ATTR_STATE_RANKING
 
@@ -353,57 +282,7 @@ class PodPointEntity(CoordinatorEntity):
 
         return winner
 
-    def __populate_status_attr(
-        self, status_prefix: str, status_object: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        key = f"{status_prefix}_"
-
-        attrs = {}
-        attrs[status_prefix] = status_object.get("id", None)
-        attrs[f"{key}{ATTR_STATUS_NAME}"] = status_object.get("name", None)
-        attrs[f"{key}{ATTR_STATUS_KEY_NAME}"] = status_object.get("key_name", None)
-        attrs[f"{key}{ATTR_STATUS_LABEL}"] = status_object.get("label", None)
-        attrs[f"{key}{ATTR_STATUS_DOOR}"] = status_object.get("door", None)
-        attrs[f"{key}{ATTR_STATUS_DOOR_ID}"] = status_object.get("door_id", None)
-
-        return attrs
-
-    def __populate_connector_attr(
-        self, connector_prefix: str, connector_object: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        key = f"{connector_prefix}_"
-
-        attrs = {}
-        attrs[connector_prefix] = connector_object.get("id", None)
-        attrs[f"{key}{ATTR_CONNECTOR_ID}"] = connector_object.get("id", None)
-        attrs[f"{key}{ATTR_CONNECTOR_DOOR}"] = connector_object.get("door", None)
-        attrs[f"{key}{ATTR_CONNECTOR_DOOR_ID}"] = connector_object.get("door_id", None)
-        attrs[f"{key}{ATTR_CONNECTOR_POWER}"] = connector_object.get("power", None)
-        attrs[f"{key}{ATTR_CONNECTOR_CURRENT}"] = connector_object.get("current", None)
-        attrs[f"{key}{ATTR_CONNECTOR_VOLTAGE}"] = connector_object.get("voltage", None)
-        attrs[f"{key}{ATTR_CONNECTOR_CHARGE_METHOD}"] = connector_object.get(
-            "charge_method", None
-        )
-        attrs[f"{key}{ATTR_CONNECTOR_HAS_CABLE}"] = connector_object.get(
-            "has_cable", None
-        )
-
-        if connector_object.get("socket", False):
-            socket_obj = connector_object.get("socket", {})
-            attrs[f"{key}{ATTR_CONNECTOR_SOCKET}"] = socket_obj.get("description", None)
-            attrs[
-                f"{key}{ATTR_CONNECTOR_SOCKET}_{ATTR_CONNECTOR_SOCKET_TYPE}"
-            ] = socket_obj.get("descripttypeion", None)
-            attrs[
-                f"{key}{ATTR_CONNECTOR_SOCKET}_{ATTR_CONNECTOR_SOCKET_OCPP_NAME}"
-            ] = socket_obj.get("ocpp_name", None)
-            attrs[
-                f"{key}{ATTR_CONNECTOR_SOCKET}_{ATTR_CONNECTOR_SOCKET_OCPP_CODE}"
-            ] = socket_obj.get("ocpp_code", None)
-
-        return attrs
-
-    def __pod_image(self, model):
+    def __pod_image(self, model: str) -> str:
         if model is None:
             return None
 
@@ -423,5 +302,6 @@ class PodPointEntity(CoordinatorEntity):
 
         return f"{APP_IMAGE_URL_BASE}/{img.lower()}.png"
 
-    def __model_slug(self) -> list[str]:
+    def __model_slug(self) -> List[str]:
+        _LOGGER.debug(self.model)
         return self.model.upper()[3:8].split("-")

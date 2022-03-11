@@ -1,9 +1,6 @@
 """Binary sensor platform for integration_blueprint."""
 import logging
-from typing import ClassVar
 from homeassistant.components.binary_sensor import BinarySensorEntity
-
-from custom_components.pod_point.errors import PodPointSessionError
 
 from .const import (
     ATTR_STATE,
@@ -49,10 +46,10 @@ class PodPointBinarySensor(PodPointEntity, BinarySensorEntity):
         status = self.extra_state_attributes.get(ATTR_STATE, "")
 
         _LOGGER.debug(
-            f"Looking for flag '%s' or '%s'",
+            "Looking for flag '%s' or '%s'",
             CHARGING_FLAG,
             ATTR_STATE_CONNECTED_WAITING,
         )
-        _LOGGER.debug(f"Got state '%s'", status)
+        _LOGGER.debug("Got state '%s'", status)
 
         return status in (CHARGING_FLAG, ATTR_STATE_CONNECTED_WAITING)

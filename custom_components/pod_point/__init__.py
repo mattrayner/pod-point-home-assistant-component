@@ -15,7 +15,10 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import PodPointApiClient
+from podpointclient.client import PodPointClient
+from podpointclient.pod import Pod
+
+from typing import List, Any
 
 from .const import (
     APP_IMAGE_URL_BASE,
@@ -46,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     password = entry.data.get(CONF_PASSWORD)
 
     session = async_get_clientsession(hass)
-    client = PodPointApiClient(email, password, session)
+    client = PodPointClient(username=email, password=password, session=session)
 
     coordinator = PodPointDataUpdateCoordinator(hass, client=client)
     await coordinator.async_refresh()
@@ -57,7 +60,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     should_cache = False
     files_path = Path(__file__).parent / "static"
     if hass.http:
-        hass.http.register_static_path(APP_IMAGE_URL_BASE, str(files_path), should_cache)
+        hass.http.register_static_path(
+            APP_IMAGE_URL_BASE, str(files_path), should_cache
+        )
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
@@ -75,22 +80,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the API."""
 
-    def __init__(self, hass: HomeAssistant, client: PodPointApiClient) -> None:
+    def __init__(self, hass: HomeAssistant, client: PodPointClient) -> None:
         """Initialize."""
-        self.api = client
+        self.api: PodPointClient = client
         self.platforms = []
+        self.pods: List[Pod] = []
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
     async def _async_update_data(self):
         """Update data via library."""
         try:
-            response = await self.api.async_get_pods()
+            self.pods: List[Pod] = await self.api.async_get_pods()
 
-            _LOGGER.debug(response)
+            _LOGGER.debug("POD DEBUG:")
+            _LOGGER.debug(type(self.pods))
+            _LOGGER.debug(type(self.pods[0]))
+            _LOGGER.debug(self.pods)
+            _LOGGER.debug("-----")
 
-            json = await response.json()
-            return json.get("pods", [])
+            return self.pods
         except Exception as exception:
             _LOGGER.error(exception)
             raise UpdateFailed() from exception

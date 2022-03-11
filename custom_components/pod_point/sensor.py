@@ -53,8 +53,7 @@ class PodPointSensor(
     @property
     def icon(self):
         """Return the icon of the sensor."""
-        model = self.extra_state_attributes[ATTR_MODEL]
-        model_slug = model.upper()[3:8].split("-")
+        model_slug = self.model.upper()[3:8].split("-")
         model_type = model_slug[0]
 
         if model_type == "1C":
