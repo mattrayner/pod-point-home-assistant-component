@@ -1,7 +1,20 @@
 """Sensor platform for integration_blueprint."""
 import logging
-from typing_extensions import Self
 from homeassistant.components.sensor import SensorEntity
+from typing import Dict, Any
+
+from datetime import datetime, timedelta, timezone
+
+from homeassistant.components.sensor import (
+    STATE_CLASS_TOTAL,
+    SensorEntity,
+)
+
+from .entity import PodPointEntity
+from homeassistant.const import (
+    ENERGY_KILO_WATT_HOUR,
+    DEVICE_CLASS_ENERGY,
+)
 
 from .const import (
     ATTR_MODEL,
@@ -14,7 +27,7 @@ from .const import (
     SENSOR,
     ATTR_IMAGE,
 )
-from .entity import PodPointEntity
+from .entity import PodPointEntity, NAME
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -25,9 +38,13 @@ async def async_setup_entry(hass, entry, async_add_devices):
     sensors = []
 
     for i in range(len(coordinator.data)):
-        sensor = PodPointSensor(coordinator, entry)
-        sensor.pod_id = i
-        sensors.append(sensor)
+        pps = PodPointSensor(coordinator, entry, i)
+        pptes = PodPointTotalEnergySensor(coordinator, entry, i)
+        ppces = PodPointCurrentEnergySensor(coordinator, entry, i)
+
+        sensors.append(pps)
+        sensors.append(pptes)
+        sensors.append(ppces)
 
     async_add_devices(sensors)
 
@@ -39,16 +56,18 @@ class PodPointSensor(
     """integration_blueprint Sensor class."""
 
     @property
+    def device_class(self) -> str:
+        return f"{DOMAIN}__pod"
+
+    @property
     def name(self):
         """Return the name of the sensor."""
-        return f"Pod Status"
+        return "Pod Status"
 
     @property
     def native_value(self):
         """Return the native value of the sensor."""
-        _LOGGER.info("Native value")
-        _LOGGER.info(self.extra_state_attributes[ATTR_STATE])
-        return self.extra_state_attributes[ATTR_STATE]
+        return self.extra_state_attributes.get(ATTR_STATE, None)
 
     @property
     def icon(self):
@@ -70,3 +89,89 @@ class PodPointSensor(
     @property
     def entity_picture(self) -> str:
         return self.image
+
+
+class PodPointTotalEnergySensor(PodPointSensor):
+    """pod_point total energy Sensor class."""
+
+    @property
+    def unique_id(self):
+        return f"{super().unique_id}_total_energy"
+
+    @property
+    def name(self) -> str:
+        return f"{self.pod.ppid} Total Energy"
+
+    @property
+    def device_class(self) -> str:
+        return DEVICE_CLASS_ENERGY
+
+    @property
+    def state_class(self) -> str:
+        return STATE_CLASS_TOTAL
+
+    @property
+    def native_value(self) -> float:
+        return self.pod.total_kwh
+
+    @property
+    def native_unit_of_measurement(self) -> str:
+        return ENERGY_KILO_WATT_HOUR
+
+    @property
+    def last_reset(self) -> datetime:
+        charges_count = len(self.pod.charges) - 1
+        if charges_count <= 0:
+            return datetime.now(tz=timezone.utc)
+
+        return self.pod.charges[charges_count].starts_at - timedelta(seconds=10)
+
+    @property
+    def icon(self):
+        icon = "mdi:lightning-bolt-outline"
+
+        if self.connected:
+            icon = "mdi:lightning-bolt"
+
+        return icon
+
+    @property
+    def entity_picture(self) -> str:
+        return None
+
+    @property
+    def is_on(self) -> bool:
+        return self.connected
+
+
+class PodPointCurrentEnergySensor(PodPointTotalEnergySensor):
+    """pod_point current charge energy Sensor class."""
+
+    @property
+    def unique_id(self):
+        return f"{super().unique_id}_current_charge_energy"
+
+    @property
+    def name(self) -> str:
+        return f"{self.pod.ppid} Current Charge Energy"
+
+    @property
+    def native_value(self) -> float:
+        return self.pod.current_kwh
+
+    @property
+    def last_reset(self) -> datetime:
+        if len(self.pod.charges) <= 0:
+            return datetime.now(tz=timezone.utc)
+
+        charge = self.pod.charges[0]
+        return charge.starts_at - timedelta(seconds=10)
+
+    @property
+    def icon(self):
+        icon = "mdi:car"
+
+        if self.connected:
+            icon = "mdi:car-electric"
+
+        return icon

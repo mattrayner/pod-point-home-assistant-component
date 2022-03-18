@@ -17,8 +17,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from podpointclient.client import PodPointClient
 from podpointclient.pod import Pod
+from podpointclient.charge import Charge
 
-from typing import List, Any
+from typing import List, Dict
 
 from .const import (
     APP_IMAGE_URL_BASE,
@@ -52,10 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     client = PodPointClient(username=email, password=password, session=session)
 
     coordinator = PodPointDataUpdateCoordinator(hass, client=client)
-    await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     should_cache = False
     files_path = Path(__file__).parent / "static"
@@ -85,24 +83,59 @@ class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
         self.api: PodPointClient = client
         self.platforms = []
         self.pods: List[Pod] = []
+        self._charges = "all"
+        self.pod_dict = None
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
     async def _async_update_data(self):
         """Update data via library."""
         try:
+            _LOGGER.debug("Updating pods and charges")
             self.pods: List[Pod] = await self.api.async_get_pods()
 
-            _LOGGER.debug("POD DEBUG:")
-            _LOGGER.debug(type(self.pods))
-            _LOGGER.debug(type(self.pods[0]))
-            _LOGGER.debug(self.pods)
-            _LOGGER.debug("-----")
+            _LOGGER.debug("Pods: %s", self.pods)
+
+            charges: List[Charge] = await self.api.async_get_charges(
+                per_page=self._charges
+            )
+            home_charges: List[Charge] = list(
+                filter(lambda charge: charge.location.home is True, charges)
+            )
+
+            _LOGGER.debug("Charges: %s", len(home_charges))
+
+            pods_by_id = self.__group_pods_by_unit_id()
+
+            charge: Charge
+            for charge in home_charges:
+                unit_id = charge.pod.id
+                pod: Pod = pods_by_id.get(unit_id, None)
+
+                if pod is None:
+                    continue
+
+                pod.charges.append(charge)
+                pod.total_kwh = pod.total_kwh + charge.kwh_used
+
+                if charge.ends_at is None:
+                    pod.current_kwh = charge.kwh_used
 
             return self.pods
         except Exception as exception:
             _LOGGER.error(exception)
             raise UpdateFailed() from exception
+
+    def __group_pods_by_unit_id(self) -> Dict[int, Pod]:
+        if self.pod_dict is not None:
+            return self.pod_dict
+
+        pod_dict: Dict[int, Pod] = {}
+        for pod in self.pods:
+            pod_dict[pod.unit_id] = pod
+
+        self.pod_dict = pod_dict
+        return self.pod_dict
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

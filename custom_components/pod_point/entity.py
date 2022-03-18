@@ -3,6 +3,7 @@ import logging
 from typing import Any, Dict, List
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
 from datetime import datetime, timedelta
 from podpointclient.pod import Pod
 from podpointclient.schedule import Schedule
@@ -15,59 +16,25 @@ from .const import (
     DOMAIN,
     NAME,
     ATTRIBUTION,
-    ATTR_COMMISSIONED,
-    ATTR_CONNECTOR,
-    ATTR_CONNECTOR_CHARGE_METHOD,
-    ATTR_CONNECTOR_CURRENT,
-    ATTR_CONNECTOR_DOOR,
-    ATTR_CONNECTOR_DOOR_ID,
-    ATTR_CONNECTOR_HAS_CABLE,
-    ATTR_CONNECTOR_ID,
-    ATTR_CONNECTOR_POWER,
-    ATTR_CONNECTOR_SOCKET,
-    ATTR_CONNECTOR_SOCKET_OCPP_CODE,
-    ATTR_CONNECTOR_SOCKET_OCPP_NAME,
-    ATTR_CONNECTOR_SOCKET_TYPE,
-    ATTR_CONNECTOR_VOLTAGE,
-    ATTR_CONTACTLESS_ENABLED,
-    ATTR_CREATED,
-    ATTR_EVZONE,
-    ATTR_HOME,
-    ATTR_ID,
-    ATTR_LAST_CONTACT,
-    ATTR_LAT,
-    ATTR_LNG,
-    ATTR_MODEL,
-    ATTR_PAYG,
-    ATTR_PRICE,
-    ATTR_PSL,
-    ATTR_PUBLIC,
-    ATTR_STATUS,
-    ATTR_STATUS_DOOR,
-    ATTR_STATUS_DOOR_ID,
-    ATTR_STATUS_KEY_NAME,
-    ATTR_STATUS_LABEL,
-    ATTR_STATUS_NAME,
-    ATTR_TIMEZONE,
-    ATTR_UNIT_ID,
     ATTR_STATE_RANKING,
     ATTR_STATE,
     ATTR_STATE_WAITING,
     ATTR_STATE_CONNECTED_WAITING,
     APP_IMAGE_URL_BASE,
+    CHARGING_FLAG,
 )
 
 
 class PodPointEntity(CoordinatorEntity):
     """Pod Point Entity"""
 
-    def __init__(self, coordinator, config_entry):
+    def __init__(self, coordinator, config_entry: ConfigEntry, idx: int):
         super().__init__(coordinator)
-        self.pod_id = None
+        self.pod_id = idx
         self.config_entry = config_entry
         self.extra_attrs = {}
 
-        self.__update_attrs
+        self.__update_attrs()
 
     def __update_attrs(self):
         pod: Pod = self.pod
@@ -77,6 +44,8 @@ class PodPointEntity(CoordinatorEntity):
             "id": pod.id,
             "integration": DOMAIN,
             "suggested_area": "Outside",
+            "total_kwh": pod.total_kwh,
+            "current_kwh": pod.current_kwh,
         }
 
         attrs.update(pod.dict)
@@ -85,26 +54,17 @@ class PodPointEntity(CoordinatorEntity):
         for status in pod.statuses:
             state = self.compare_state(state, status.key_name)
 
-        _LOGGER.debug(state)
-        _LOGGER.debug("Charging allowed: %s", self.charging_allowed)
-
         is_available_state = state == ATTR_STATE_AVAILABLE
         is_charging_state = state == ATTR_STATE_CHARGING
         charging_not_allowed = self.charging_allowed is False
         should_be_waiting_state = is_available_state and charging_not_allowed
         should_be_connected_waiting_state = is_charging_state and charging_not_allowed
 
-        _LOGGER.debug("Is charging state: %s", is_charging_state)
-        _LOGGER.debug("Charging not allowed: %s", charging_not_allowed)
-        _LOGGER.debug("Should be waiting state: %s", should_be_waiting_state)
-
         if should_be_waiting_state:
             state = ATTR_STATE_WAITING
 
         if should_be_connected_waiting_state:
             state = ATTR_STATE_CONNECTED_WAITING
-
-        _LOGGER.info("Computed state: %s", state)
 
         attrs[ATTR_STATE] = state
 
@@ -117,17 +77,21 @@ class PodPointEntity(CoordinatorEntity):
         """Handle updated data from the coordinator."""
         self.__update_attrs()
 
-        self.async_write_ha_state()
+        # self.async_write_ha_state()
 
     @property
     def pod(self) -> Pod:
+        """Return the underlying pod that drives this entity"""
         pod: Pod = self.coordinator.data[self.pod_id]
         return pod
 
     @property
     def unique_id(self):
         """Return a unique ID to use for this entity."""
-        return self.config_entry.entry_id
+        if self.pod.id:
+            return f"{DOMAIN}_{self.pod.id}_{self.pod.ppid}"
+        else:
+            return self.config_entry.entry_id
 
     @property
     def device_info(self) -> Dict[str, Any]:
@@ -136,7 +100,7 @@ class PodPointEntity(CoordinatorEntity):
             name = self.psl
 
         return {
-            "identifiers": {(DOMAIN, self.unique_id)},
+            "identifiers": {(DOMAIN, self.pod.ppid)},
             "name": name,
             "model": self.model,
             "manufacturer": NAME,
@@ -170,10 +134,6 @@ class PodPointEntity(CoordinatorEntity):
             None,
         )
 
-        _LOGGER.debug("Weekday %s", weekday)
-        _LOGGER.debug("Schedule for day:")
-        _LOGGER.debug(schedule_for_day)
-
         # If no schedule is set for our day, return False early, there should always be a
         # schedule for each day, even if it is inactive
         if schedule_for_day is None:
@@ -185,8 +145,6 @@ class PodPointEntity(CoordinatorEntity):
         if schedule_active is None:
             return False
 
-        _LOGGER.debug("Schedule active: %s", schedule_active)
-
         # If the schedule for this day is not active, we can charge
         if schedule_active is False:
             return True
@@ -195,8 +153,6 @@ class PodPointEntity(CoordinatorEntity):
         start_date = datetime.now().replace(
             hour=start_time[0], minute=start_time[1], second=start_time[2]
         )
-
-        _LOGGER.debug("start: %s", start_date)
 
         end_time = list(map(lambda x: int(x), schedule_for_day.end_time.split(":")))
         end_day = schedule_for_day.end_day
@@ -222,15 +178,11 @@ class PodPointEntity(CoordinatorEntity):
                 hour=end_time[0], minute=end_time[1], second=end_time[2]
             )
 
-        _LOGGER.debug("end: %s", end_date)
-
         # Problem creating the end_date, so we will exit with False
         if end_date is None:
             return False
 
         in_range = start_date <= datetime.now() <= end_date
-
-        _LOGGER.debug(f"in range: %s", in_range)
 
         # Are we within the range for today?
         return in_range
@@ -255,6 +207,12 @@ class PodPointEntity(CoordinatorEntity):
         """Return the image url for this model"""
         return self.__pod_image(self.model)
 
+    @property
+    def connected(self) -> bool:
+        """Returns true if pod is connected to a vehicle"""
+        status = self.extra_state_attributes.get(ATTR_STATE, "")
+        return status in (CHARGING_FLAG, ATTR_STATE_CONNECTED_WAITING)
+
     def compare_state(self, state, pod_state) -> str:
         """Given two states, which one is most important"""
         ranking = ATTR_STATE_RANKING
@@ -277,8 +235,6 @@ class PodPointEntity(CoordinatorEntity):
             pod_rank = 100
 
         winner = state if state_rank >= pod_rank else pod_state
-
-        _LOGGER.debug("Winning state: %s from %s and %s", winner, state, pod_state)
 
         return winner
 
@@ -303,5 +259,4 @@ class PodPointEntity(CoordinatorEntity):
         return f"{APP_IMAGE_URL_BASE}/{img.lower()}.png"
 
     def __model_slug(self) -> List[str]:
-        _LOGGER.debug(self.model)
         return self.model.upper()[3:8].split("-")

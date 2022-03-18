@@ -10,7 +10,7 @@
     "@mattrayner"
   ],
   "requirements": [
-    "podpointclient==0.0.9",
+    "podpointclient==0.1.5",
     "StrEnum>=0.4,<0.5"
   ],
   "quality_scale": "silver"

@@ -5,14 +5,14 @@ from podpointclient.version import __version__ as pp_version
 NAME = "Pod Point"
 DOMAIN = "pod_point"
 DOMAIN_DATA = f"{DOMAIN}_data"
-VERSION = "0.2.0"
+VERSION = "0.3.0"
 ATTRIBUTION = "Data provided by https://pod-point.com/"
 ISSUE_URL = "https://github.com/mattrayner/pod-point-home-assistant-component/issues"
 
 # Icons
-ICON = "mdi:ev-plug-mennekes"
 ICON_1C = "mdi:ev-plug-type1"
 ICON_2C = "mdi:ev-plug-type2"
+ICON = ICON_2C
 ICON_EV_STATION = "mdi:ev-station"
 
 SWITCH_ICON = ICON_EV_STATION
@@ -25,6 +25,7 @@ BINARY_SENSOR = "binary_sensor"
 SENSOR = "sensor"
 SWITCH = "switch"
 PLATFORMS = [BINARY_SENSOR, SENSOR, SWITCH]
+ENERGY = "energy"
 
 # Configuration and options
 CONF_ENABLED = "enabled"

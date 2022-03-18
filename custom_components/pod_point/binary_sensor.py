@@ -10,6 +10,7 @@ from .const import (
     CHARGING_FLAG,
 )
 from .entity import PodPointEntity
+from typing import Dict, Any
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -20,15 +21,20 @@ async def async_setup_entry(hass, entry, async_add_devices):
 
     sensors = []
     for i in range(len(coordinator.data)):
-        sensor = PodPointBinarySensor(coordinator, entry)
+        sensor = PodPointBinarySensor(coordinator, entry, i)
         sensor.pod_id = i
         sensors.append(sensor)
 
-    async_add_devices([sensor])
+    async_add_devices(sensors)
 
 
 class PodPointBinarySensor(PodPointEntity, BinarySensorEntity):
     """integration_blueprint binary_sensor class."""
+
+    @property
+    def extra_state_attributes(self) -> Dict[str, Any]:
+        state = super().extra_state_attributes.get(ATTR_STATE, "")
+        return {ATTR_STATE: state, "current_kwhs": self.pod.current_kwh}
 
     @property
     def name(self):
@@ -43,13 +49,4 @@ class PodPointBinarySensor(PodPointEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Return true if the binary_sensor is on."""
-        status = self.extra_state_attributes.get(ATTR_STATE, "")
-
-        _LOGGER.debug(
-            "Looking for flag '%s' or '%s'",
-            CHARGING_FLAG,
-            ATTR_STATE_CONNECTED_WAITING,
-        )
-        _LOGGER.debug("Got state '%s'", status)
-
-        return status in (CHARGING_FLAG, ATTR_STATE_CONNECTED_WAITING)
+        return self.connected

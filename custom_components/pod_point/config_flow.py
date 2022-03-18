@@ -5,12 +5,8 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import voluptuous as vol
 
 from podpointclient.client import PodPointClient
-from .const import (
-    CONF_PASSWORD,
-    CONF_EMAIL,
-    DOMAIN,
-    PLATFORMS,
-)
+
+from .const import CONF_PASSWORD, CONF_EMAIL, DOMAIN, PLATFORMS, ENERGY
 
 
 class BlueprintFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -22,6 +18,19 @@ class BlueprintFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize."""
         self._errors = {}
+
+    async def async_step_reauth(self, user_input=None):
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input=None):
+        """Dialog that informs the user that reauth is required."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=vol.Schema({}),
+            )
+        return await self.async_step_user()
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -35,7 +44,15 @@ class BlueprintFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             valid = await self._test_credentials(
                 user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
             )
+
             if valid:
+                existing_entry = await self.async_set_unique_id(DOMAIN)
+                if existing_entry:
+                    self.hass.config_entries.async_update_entry(
+                        existing_entry, title=user_input[CONF_EMAIL], data=user_input
+                    )
+                    await self.hass.config_entries.async_reload(existing_entry.entry_id)
+
                 return self.async_create_entry(
                     title=user_input[CONF_EMAIL], data=user_input
                 )
@@ -73,7 +90,9 @@ class BlueprintFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Return true if credentials is valid."""
         try:
             session = async_create_clientsession(self.hass)
-            client = PodPointClient(username=username, password=password, session=session)
+            client = PodPointClient(
+                username=username, password=password, session=session
+            )
             await client.async_get_pods()
             return True
         except Exception:  # pylint: disable=broad-except

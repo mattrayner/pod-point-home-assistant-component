@@ -57,6 +57,40 @@ async def test_successful_config_flow(hass, bypass_get_data):
     assert result["result"]
 
 
+# Here we simiulate a successful reauth config flow from the backend.
+# Note that we use the `bypass_get_data` fixture here because
+# we want the config flow validation to succeed during the test.
+async def test_reauth_config_flow(hass, bypass_get_data):
+    """Test a successful config flow."""
+    # Initialize a config flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
+    )
+
+    # Check that the config flow shows the reauth form as the first step
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    # If a user were to enter `test_username` for username and `test_password`
+    # for password, it would result in this function call
+    await hass.config_entries.flow.async_configure(
+        result["flow_id"],  # user_input=MOCK_CONFIG
+    )
+
+    print(result)
+
+    result = await hass.config_entries.flow.async_update_entry(
+        result["entry_id"], user_input=MOCK_CONFIG
+    )
+
+    # Check that the config flow is complete and a new entry is created with
+    # the input data
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "Re authention: test@example.com"
+    assert result["data"] == MOCK_CONFIG
+    assert result["result"]
+
+
 # In this case, we want to simulate a failure during the config flow.
 # We use the `error_on_get_data` mock instead of `bypass_get_data`
 # (note the function parameters) to raise an Exception during

@@ -16,8 +16,10 @@ _Unofficial component to integrate with [Pod Point][pod_point_web] Solo/Solo 3 c
 
 Platform | Description
 -- | --
-`binary_sensor` | Shows if the pod is connected to a vehicle
+`binary_sensor` | Shows if the pod is connected to a vehicle.
 `sensor` | Show info from Pod Point API.
+`sensor` (Total Energy) | Show a combined KWh value from all charges for a given pod.
+`sensor` (Current Charge Energy) | Show the KWh for the current charge session (or 0).
 `switch` | Enable/disable  charging.
 
 ![example][exampleimg]
@@ -47,9 +49,21 @@ out-of-service | This pod is not in service. Reach out to Pod Point for more inf
 waiting-for-schedule | Pod charging is currently blocked by schedule. Connecting your vehicle will *not* begin charging.
 connected-waiting-for-schedule | Your vehicle is connected to the pod but charging is currently prevented due to a schedule.
 
+## Energy sensors
+
+We populate two energy sensors for each pod connected to your account. These are for the *total* energy you have charged on a given pod and the *current* energy if you are connected and have a charge session ongoing.
+
+If you want to add Pod Point stats to the built in energy dashboard, you should add the `Current Charge Energy` sensor as a device. This sensor reports when the value is reset and should allow you to track the energy usage of your pod.
+
+> *Note:* The Pod Point APIs perform some rounding on the kWh values returned meaning they may be sightly lower than the true energy consumed. We are unable to address this within the component.
+
+### Known energy issues:
+
+1. If you repeatedly restart your home assistant instance whilst actively charging, the energy dashboard will add your kWh together showning a higher value. e.g. 3.2kWh restarted twice would show 9.6kWh (3.2kWh + 3.2kWh + 3.2kWh).
+
 ## Lovelace examples
 
-### Header Images
+### Header images
 
 In the example below, and for the sensors created by this integration, there are a number of pod 'images' that are included for use in the UI, each image and model is listed below.
 

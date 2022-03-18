@@ -14,8 +14,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
 
     switches = []
     for i in range(len(coordinator.data)):
-        switch = PodPointBinarySwitch(coordinator, entry)
-        switch.pod_id = i
+        switch = PodPointBinarySwitch(coordinator, entry, i)
 
         switches.append(switch)
     async_add_devices(switches)
@@ -26,18 +25,13 @@ class PodPointBinarySwitch(PodPointEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs):  # pylint: disable=unused-argument
         """Allow charging (clear schedule)"""
-        _LOGGER.debug(type(self.pod))
-        _LOGGER.debug(self.pod)
         await self.coordinator.api.async_set_schedule(False, self.pod)
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs):  # pylint: disable=unused-argument
         """Block charging (turn on schedule)"""
-        _LOGGER.debug(type(self.pod))
-        _LOGGER.debug(self.pod)
-
         await self.coordinator.api.async_set_schedule(True, self.pod)
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()
 
     @property
     def name(self):
@@ -52,5 +46,4 @@ class PodPointBinarySwitch(PodPointEntity, SwitchEntity):
     @property
     def is_on(self):
         """Return true if the switch is on."""
-        _LOGGER.info("is_on called")
         return self.charging_allowed

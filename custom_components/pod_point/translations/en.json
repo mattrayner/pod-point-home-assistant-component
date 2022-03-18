@@ -8,6 +8,10 @@
                     "email": "Email address",
                     "password": "Password"
                 }
+            },
+            "reauth_confirm": {
+                "title": "[%key:common::config_flow::title::reauth%]",
+                "description": "Pod Point needs to re-authenticate your account"
             }
         },
         "error": {
@@ -15,7 +19,8 @@
             "session": "Unable to create a user session. Please try again later."
         },
         "abort": {
-            "single_instance_allowed": "Only a single instance is allowed."
+            "single_instance_allowed": "Only a single instance is allowed.",
+            "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
         }
     },
     "options": {
