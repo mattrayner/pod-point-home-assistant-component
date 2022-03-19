@@ -16,9 +16,9 @@
 # pytest includes fixtures OOB which you can use as defined on this page)
 from unittest.mock import patch
 
-from .fixtures import POD_COMPLETE_FIXTURE
+from .fixtures import CHARGES_COMPLETE_FIXTURE, POD_COMPLETE_FIXTURE
 
-from podpointclient.factories import PodFactory
+from podpointclient.factories import PodFactory, ChargeFactory
 
 import pytest
 
@@ -50,9 +50,11 @@ def skip_notifications_fixture():
 def bypass_get_data_fixture():
     """Skip calls to get data from API."""
 
-    factory = PodFactory()
-    pods = factory.build_pods({"pods": [POD_COMPLETE_FIXTURE]})
+    pod_factory = PodFactory()
+    pods = pod_factory.build_pods({"pods": [POD_COMPLETE_FIXTURE]})
     pod = pods[0]
+    charge_factory = ChargeFactory()
+    charges = charge_factory.build_charges(CHARGES_COMPLETE_FIXTURE)
 
     with patch(
         "podpointclient.client.PodPointClient.async_get_pods", return_value=pods
@@ -60,6 +62,8 @@ def bypass_get_data_fixture():
         "podpointclient.client.PodPointClient.async_get_pod", return_value=pod
     ), patch(
         "podpointclient.client.PodPointClient.async_set_schedule", return_value=True
+    ), patch(
+        "podpointclient.client.PodPointClient.async_get_charges", return_value=charges
     ):
         yield
 

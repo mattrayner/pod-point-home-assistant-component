@@ -6,7 +6,7 @@ from typing import Dict, Any
 from datetime import datetime, timedelta, timezone
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_TOTAL,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
 
@@ -108,7 +108,7 @@ class PodPointTotalEnergySensor(PodPointSensor):
 
     @property
     def state_class(self) -> str:
-        return STATE_CLASS_TOTAL
+        return STATE_CLASS_TOTAL_INCREASING
 
     @property
     def native_value(self) -> float:
@@ -153,7 +153,7 @@ class PodPointCurrentEnergySensor(PodPointTotalEnergySensor):
 
     @property
     def name(self) -> str:
-        return f"{self.pod.ppid} Current Charge Energy"
+        return f"{self.pod.ppid} Current Energy"
 
     @property
     def native_value(self) -> float:

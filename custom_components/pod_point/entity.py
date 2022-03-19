@@ -76,8 +76,7 @@ class PodPointEntity(CoordinatorEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.__update_attrs()
-
-        # self.async_write_ha_state()
+        self.async_write_ha_state()
 
     @property
     def pod(self) -> Pod:
@@ -109,18 +108,11 @@ class PodPointEntity(CoordinatorEntity):
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
-        # return {
-        #     "attribution": ATTRIBUTION,
-        #     "id": str(self.coordinator.data.get("id")),
-        #     "integration": DOMAIN,
-        # }
         return self.extra_attrs
 
     @property
     def charging_allowed(self) -> bool:
         """Is charging allowed by schedule?"""
-        _LOGGER.info("Getting schedules")
-
         pod: Pod = self.coordinator.data[self.pod_id]
         schedules: List[Schedule] = pod.charge_schedules
 

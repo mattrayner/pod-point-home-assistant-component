@@ -94,7 +94,7 @@ class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.debug("Updating pods and charges")
             self.pods: List[Pod] = await self.api.async_get_pods()
 
-            _LOGGER.debug("Pods: %s", self.pods)
+            _LOGGER.debug("Pods: %s", len(self.pods))
 
             charges: List[Charge] = await self.api.async_get_charges(
                 per_page=self._charges
@@ -121,6 +121,7 @@ class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
                 if charge.ends_at is None:
                     pod.current_kwh = charge.kwh_used
 
+            self.pods = list(pods_by_id.values())
             return self.pods
         except Exception as exception:
             _LOGGER.error(exception)
