@@ -50,3 +50,4 @@ class PodPointBinarySensor(PodPointEntity, BinarySensorEntity):
     def is_on(self):
         """Return true if the binary_sensor is on."""
         return self.connected
+4

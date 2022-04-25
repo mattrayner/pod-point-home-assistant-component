@@ -1,7 +1,11 @@
 """Sensor platform for integration_blueprint."""
 import logging
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from typing import Dict, Any
+from homeassistant.core import callback
+from podpointclient.pod import Pod
+from .const import ATTRIBUTION, DOMAIN
 
 from datetime import datetime, timedelta, timezone
 
@@ -94,6 +98,48 @@ class PodPointSensor(
 class PodPointTotalEnergySensor(PodPointSensor):
     """pod_point total energy Sensor class."""
 
+    def __init__(self, coordinator, config_entry: ConfigEntry, idx: int):
+        super().__init__(coordinator, config_entry=config_entry, idx=idx)
+        self.previous_total = self.pod.total_kwh
+        self.total_kwh_diff = self.previous_total
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.__update_attrs()
+        self.async_write_ha_state()
+
+    def __update_attrs(self):
+        ""
+        # _LOGGER.debug(type(super()))
+        # pod: Pod = self.pod
+
+        # # new_total = self.pod.total_kwh
+        # # self.total_kwh_diff = new_total - self.previous_total
+
+        # attrs = {
+        #     "attribution": ATTRIBUTION,
+        #     "id": pod.id,
+        #     "integration": DOMAIN,
+        #     "suggested_area": "Outside",
+        #     "total_kwh": pod.total_kwh,
+        #     "total_kwh_difference": self.total_kwh_diff,
+        #     "current_kwh": pod.current_kwh,
+        # }
+
+        # self.extra_attrs = attrs
+
+        # _LOGGER.debug(
+        #     "Updating Total Energy Sensor: Total %s - Diff %s",
+        #     # new_total,
+        #     self.total_kwh_diff,
+        # )
+
+    @property
+    def extra_state_attributes(self) -> Dict[str, Any]:
+        """Return the state attributes."""
+        return self.extra_attrs
+
     @property
     def unique_id(self):
         return f"{super().unique_id}_total_energy"
@@ -112,7 +158,7 @@ class PodPointTotalEnergySensor(PodPointSensor):
 
     @property
     def native_value(self) -> float:
-        return self.pod.total_kwh
+        return self.total_kwh_diff
 
     @property
     def native_unit_of_measurement(self) -> str:

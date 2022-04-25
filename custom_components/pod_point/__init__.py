@@ -30,7 +30,7 @@ from .const import (
     STARTUP_MESSAGE,
 )
 
-SCAN_INTERVAL = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(minutes=1)
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -104,6 +104,9 @@ class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
             )
 
             _LOGGER.debug("Charges: %s", len(home_charges))
+
+            for pod in self.pods:
+                pod.total_kwh = 0.0
 
             pods_by_id = self.__group_pods_by_unit_id()
 
