@@ -6,7 +6,15 @@ import voluptuous as vol
 
 from podpointclient.client import PodPointClient
 
-from .const import CONF_PASSWORD, CONF_EMAIL, DOMAIN, PLATFORMS, ENERGY
+from .const import (
+    CONF_PASSWORD,
+    CONF_EMAIL,
+    DOMAIN,
+    PLATFORMS,
+    ENERGY,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
+)
 
 
 class BlueprintFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -118,15 +126,24 @@ class PodPointOptionsFlowHandler(config_entries.OptionsFlow):
             self.options.update(user_input)
             return await self._update_options()
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(x, default=self.options.get(x, True)): bool
-                    for x in sorted(PLATFORMS)
-                }
-            ),
-        )
+        poll_schema = {
+            vol.Required(
+                CONF_SCAN_INTERVAL,
+                default=self.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+            ): int
+        }
+
+        platforms_schema = {
+            vol.Required(
+                x,
+                default=self.options.get(x, True),
+            ): bool
+            for x in sorted(PLATFORMS)
+        }
+
+        options_schema = vol.Schema({**poll_schema, **platforms_schema})
+
+        return self.async_show_form(step_id="user", data_schema=options_schema)
 
     async def _update_options(self):
         """Update config entry options."""

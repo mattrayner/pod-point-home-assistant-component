@@ -10,6 +10,7 @@ from .const import ATTRIBUTION, DOMAIN
 from datetime import datetime, timedelta, timezone
 
 from homeassistant.components.sensor import (
+    STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
@@ -21,15 +22,11 @@ from homeassistant.const import (
 )
 
 from .const import (
-    ATTR_MODEL,
     ATTR_STATE,
-    DEFAULT_NAME,
     DOMAIN,
     ICON,
     ICON_1C,
     ICON_2C,
-    SENSOR,
-    ATTR_IMAGE,
 )
 from .entity import PodPointEntity, NAME
 
@@ -110,30 +107,23 @@ class PodPointTotalEnergySensor(PodPointSensor):
         self.async_write_ha_state()
 
     def __update_attrs(self):
-        ""
-        # _LOGGER.debug(type(super()))
-        # pod: Pod = self.pod
+        pod: Pod = self.pod
 
-        # # new_total = self.pod.total_kwh
-        # # self.total_kwh_diff = new_total - self.previous_total
+        new_total = self.pod.total_kwh
+        self.total_kwh_diff = new_total - self.previous_total
+        self.previous_total = new_total
 
-        # attrs = {
-        #     "attribution": ATTRIBUTION,
-        #     "id": pod.id,
-        #     "integration": DOMAIN,
-        #     "suggested_area": "Outside",
-        #     "total_kwh": pod.total_kwh,
-        #     "total_kwh_difference": self.total_kwh_diff,
-        #     "current_kwh": pod.current_kwh,
-        # }
+        attrs = {
+            "attribution": ATTRIBUTION,
+            "id": pod.id,
+            "integration": DOMAIN,
+            "suggested_area": "Outside",
+            "total_kwh": pod.total_kwh,
+            "total_kwh_difference": self.total_kwh_diff,
+            "current_kwh": pod.current_kwh,
+        }
 
-        # self.extra_attrs = attrs
-
-        # _LOGGER.debug(
-        #     "Updating Total Energy Sensor: Total %s - Diff %s",
-        #     # new_total,
-        #     self.total_kwh_diff,
-        # )
+        self.extra_attrs = attrs
 
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
@@ -158,7 +148,7 @@ class PodPointTotalEnergySensor(PodPointSensor):
 
     @property
     def native_value(self) -> float:
-        return self.total_kwh_diff
+        return self.pod.total_kwh
 
     @property
     def native_unit_of_measurement(self) -> str:
@@ -170,6 +160,7 @@ class PodPointTotalEnergySensor(PodPointSensor):
         if charges_count <= 0:
             return datetime.now(tz=timezone.utc)
 
+        # Get the start date of the first charge
         return self.pod.charges[charges_count].starts_at - timedelta(seconds=10)
 
     @property
@@ -206,10 +197,15 @@ class PodPointCurrentEnergySensor(PodPointTotalEnergySensor):
         return self.pod.current_kwh
 
     @property
+    def state_class(self) -> str:
+        return STATE_CLASS_TOTAL
+
+    @property
     def last_reset(self) -> datetime:
         if len(self.pod.charges) <= 0:
             return datetime.now(tz=timezone.utc)
 
+        # Get the most recent charge
         charge = self.pod.charges[0]
         return charge.starts_at - timedelta(seconds=10)
 

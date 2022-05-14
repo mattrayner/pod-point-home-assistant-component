@@ -134,6 +134,21 @@ state_color: true
 
 If you want to contribute to this please read the [Contribution guidelines](CONTRIBUTING.md)
 
+### Development setup
+
+If you want to develop with this locally and test within the devcontainer, ensure you follow the below setups (within the devcontainer):
+
+```bash
+make setup-debian
+make setup
+```
+
+Once you have setup the environment with all of the dependencies, try running the tests:
+
+```bash
+make test
+```
+
 ***
 
 [pod_point_web]: https://pod-point.com

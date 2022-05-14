@@ -31,6 +31,8 @@ ENERGY = "energy"
 CONF_ENABLED = "enabled"
 CONF_EMAIL = "email"
 CONF_PASSWORD = "password"
+CONF_SCAN_INTERVAL = "scan_interval"
+DEFAULT_SCAN_INTERVAL = 300
 
 # Defaults
 DEFAULT_NAME = DOMAIN

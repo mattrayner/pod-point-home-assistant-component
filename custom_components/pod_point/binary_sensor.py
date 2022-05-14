@@ -34,7 +34,10 @@ class PodPointBinarySensor(PodPointEntity, BinarySensorEntity):
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         state = super().extra_state_attributes.get(ATTR_STATE, "")
-        return {ATTR_STATE: state, "current_kwhs": self.pod.current_kwh}
+        return {
+            ATTR_STATE: state,
+            "current_kwhs": self.pod.current_kwh,
+        }
 
     @property
     def name(self):
@@ -50,4 +53,3 @@ class PodPointBinarySensor(PodPointEntity, BinarySensorEntity):
     def is_on(self):
         """Return true if the binary_sensor is on."""
         return self.connected
-4

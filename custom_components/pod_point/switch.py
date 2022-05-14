@@ -1,10 +1,9 @@
 """Switch platform for integration_blueprint."""
-import time
+import logging
 from homeassistant.components.switch import SwitchEntity
 from podpointclient.client import PodPointClient
 
-import logging
-from .const import DEFAULT_NAME, DOMAIN, ICON, SWITCH, SWITCH_ICON
+from .const import DOMAIN, SWITCH_ICON
 from .entity import PodPointEntity
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -27,35 +26,17 @@ class PodPointBinarySwitch(PodPointEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs):  # pylint: disable=unused-argument
         """Allow charging (clear schedule)"""
-        start_1 = time.time()
         api: PodPointClient = self.coordinator.api
         await api.async_set_schedule(enabled=False, pod=self.pod)
-        end_1 = time.time()
-        start_2 = time.time()
+
         await self.coordinator.async_request_refresh()
-        end_2 = time.time()
-        _LOGGER.debug(
-            "Turn on timings: total %ss set: %ss update: %ss",
-            end_2 - start_1,
-            end_1 - start_1,
-            end_2 - start_2,
-        )
 
     async def async_turn_off(self, **kwargs):  # pylint: disable=unused-argument
         """Block charging (turn on schedule)"""
-        start_1 = time.time()
         api: PodPointClient = self.coordinator.api
         await api.async_set_schedule(enabled=True, pod=self.pod)
-        end_1 = time.time()
-        start_2 = time.time()
+
         await self.coordinator.async_request_refresh()
-        end_2 = time.time()
-        _LOGGER.debug(
-            "Turn off timings: total %ss set: %ss update: %ss",
-            end_2 - start_1,
-            end_1 - start_1,
-            end_2 - start_2,
-        )
 
     @property
     def name(self):

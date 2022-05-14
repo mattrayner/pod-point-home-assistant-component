@@ -116,8 +116,6 @@ class PodPointEntity(CoordinatorEntity):
         pod: Pod = self.coordinator.data[self.pod_id]
         schedules: List[Schedule] = pod.charge_schedules
 
-        print(schedules)
-
         # No schedules are found, we will assume we can charge
         if len(schedules) <= 0:
             return True
@@ -128,17 +126,12 @@ class PodPointEntity(CoordinatorEntity):
             None,
         )
 
-        print(weekday)
-        print(schedule_for_day)
-
         # If no schedule is set for our day, return False early, there should always be a
         # schedule for each day, even if it is inactive
         if schedule_for_day is None:
             return False
 
         schedule_active = schedule_for_day.is_active
-
-        print(schedule_active)
 
         # If schedule_active is None, there was a problem. we will return False
         if schedule_active is None:
@@ -152,9 +145,6 @@ class PodPointEntity(CoordinatorEntity):
         start_date = datetime.now().replace(
             hour=start_time[0], minute=start_time[1], second=start_time[2]
         )
-
-        print(start_time)
-        print(start_date)
 
         end_time = list(map(lambda x: int(x), schedule_for_day.end_time.split(":")))
         end_day = schedule_for_day.end_day
@@ -180,17 +170,11 @@ class PodPointEntity(CoordinatorEntity):
                 hour=end_time[0], minute=end_time[1], second=end_time[2]
             )
 
-        print(end_time)
-        print(end_date)
-        print(end_day)
-
         # Problem creating the end_date, so we will exit with False
         if end_date is None:
             return False
 
         in_range = start_date <= datetime.now() <= end_date
-
-        print(in_range)
 
         # Are we within the range for today?
         return in_range

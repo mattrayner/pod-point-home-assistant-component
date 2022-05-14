@@ -25,12 +25,13 @@ from .const import (
     APP_IMAGE_URL_BASE,
     CONF_PASSWORD,
     CONF_EMAIL,
+    CONF_SCAN_INTERVAL,
     DOMAIN,
     PLATFORMS,
     STARTUP_MESSAGE,
+    DEFAULT_SCAN_INTERVAL,
 )
 
-SCAN_INTERVAL = timedelta(minutes=1)
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -52,7 +53,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     session = async_get_clientsession(hass)
     client = PodPointClient(username=email, password=password, session=session)
 
-    coordinator = PodPointDataUpdateCoordinator(hass, client=client)
+    try:
+        scan_interval = timedelta(seconds=entry.options[CONF_SCAN_INTERVAL])
+    except KeyError:
+        scan_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
+
+    coordinator = PodPointDataUpdateCoordinator(
+        hass, client=client, scan_interval=scan_interval
+    )
     await coordinator.async_config_entry_first_refresh()
 
     should_cache = False
@@ -78,7 +86,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the API."""
 
-    def __init__(self, hass: HomeAssistant, client: PodPointClient) -> None:
+    def __init__(
+        self, hass: HomeAssistant, client: PodPointClient, scan_interval: int
+    ) -> None:
         """Initialize."""
         self.api: PodPointClient = client
         self.platforms = []
@@ -86,13 +96,14 @@ class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
         self._charges = "all"
         self.pod_dict = None
 
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
+        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=scan_interval)
 
     async def _async_update_data(self):
         """Update data via library."""
         try:
             _LOGGER.debug("Updating pods and charges")
             self.pods: List[Pod] = await self.api.async_get_pods()
+            self.pod_dict = None
 
             _LOGGER.debug("Pods: %s", len(self.pods))
 
@@ -104,9 +115,6 @@ class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
             )
 
             _LOGGER.debug("Charges: %s", len(home_charges))
-
-            for pod in self.pods:
-                pod.total_kwh = 0.0
 
             pods_by_id = self.__group_pods_by_unit_id()
 

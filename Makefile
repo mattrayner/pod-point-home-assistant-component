@@ -1,7 +1,7 @@
 .PHONY: setup setup-debian update-pip install-deps test
 
 setup-debian:
-	sudo apt-get update && sudo apt-get upgrade -y
+	sudo apt-get update
 	sudo apt-get install python3-dev -y
 	# Sometimes installing raumel.yaml fails and the fix is to purge gcc. No idea why
 	# sudo apt-get purge gcc -y
