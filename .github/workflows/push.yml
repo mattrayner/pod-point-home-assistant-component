@@ -43,7 +43,7 @@ jobs:
         with:
           python-version: "3.8"
       - name: Install requirements
-        run: python3 -m pip install -r requirements_test.txt
+        run: python3 -m pip install -r requirements_test.txt -r requirements.txt
       - name: Run tests
         run: |
           pytest \
