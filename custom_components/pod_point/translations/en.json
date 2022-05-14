@@ -2,7 +2,6 @@
     "config": {
         "step": {
             "user": {
-                "title": "Pod Point",
                 "description": "Please enter the email and password that you use to login to the Pod Point mobile app.",
                 "data": {
                     "email": "Email address",
@@ -10,7 +9,6 @@
                 }
             },
             "reauth_confirm": {
-                "title": "[%key:common::config_flow::title::reauth%]",
                 "description": "Pod Point needs to re-authenticate your account"
             }
         },
