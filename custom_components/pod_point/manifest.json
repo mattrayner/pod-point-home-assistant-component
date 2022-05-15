@@ -4,7 +4,7 @@
   "documentation": "https://github.com/mattrayner/pod-point-home-assistant-component",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/mattrayner/pod-point-home-assistant-component/issues",
-  "version": "0.3.0-beta5",
+  "version": "0.3.0-rc",
   "config_flow": true,
   "codeowners": [
     "@mattrayner"
