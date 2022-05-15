@@ -86,10 +86,6 @@ If you want to add Pod Point stats to the built in energy dashboard, you should 
 
 > *Note:* The Pod Point APIs perform some rounding on the kWh values returned meaning they may be sightly lower than the true energy consumed. We are unable to address this within the component.
 
-### Known energy issues:
-
-1. If you repeatedly restart your home assistant instance whilst actively charging, the energy dashboard will add your kWh together showning a higher value. e.g. 3.2kWh restarted twice would show 9.6kWh (3.2kWh + 3.2kWh + 3.2kWh).
-
 ## Lovelace examples
 
 ### Header images
@@ -114,11 +110,17 @@ Solo 3 Tethered | /api/pod_point/static/2c-03.png
 ```yaml
 type: entities
 entities:
-  - entity: sensor.pod_status
-    name: Status
-  - entity: binary_sensor.cable_status
-    name: Cable
-  - entity: switch.charging_allowed
+  - entity: binary_sensor.psl_xxxxxx_cable_status
+    name: Cable Status
+  - entity: sensor.psl_xxxxxx_status
+    name: Pod Status
+  - entity: switch.psl_xxxxxx_charging_allowed
+    name: Charging Allowed
+  - entity: sensor.psl_xxxxxx_current_energy
+    name: Current Energy
+  - entity: sensor.psl_xxxxxx_total_energy
+    name: Total Energy
+    secondary_info: none
 title: Pod Point
 header:
   type: picture
@@ -159,7 +161,7 @@ make test
 [commits]: https://github.com/mattrayner/pod-point-home-assistant-component/commits/master
 [hacs]: https://github.com/custom-components/hacs
 [hacsbadge]: https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge
-[exampleimg]: https://github.com/mattrayner/pod-point-home-assistant-component/raw/ef2c39788cdcd85d08a9adab1c06d74c51d38993/example.png
+[exampleimg]: https://github.com/mattrayner/pod-point-home-assistant-component/raw/76752c0d0dbef64fc482140b7d0937c2b19faab0/example.png
 [whichpodimg]: https://github.com/mattrayner/pod-point-home-assistant-component/raw/ef2c39788cdcd85d08a9adab1c06d74c51d38993/which_pod.png
 [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge
 [forum]: https://community.home-assistant.io/
