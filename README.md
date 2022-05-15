@@ -26,6 +26,8 @@ Platform | Description
 
 ## Installation
 
+> **NOTE:** Due to support for energy sensors and multiple Pod Point accounts, upgrading from <0.3 is not supported. You should remove your pod point configuration and re-configure it after upgrading.
+
 ### HACS (recommended)
 
 You can install this component via HACS by searching for 'Pod Point' and then install it from the main HACS integration screen.
@@ -62,6 +64,8 @@ custom_components/pod_point/switch.py
 ```
 
 ## Configuration is done in the UI
+
+> **NOTE:** Due to support for energy sensors and multiple Pod Point accounts, upgrading from <0.3 is not supported. You should remove your pod point configuration and re-configure it after upgrading.
 
 Once you have installed either manually or via HACS, restart your home assistant instance and then setup the component by choosing 'Add integration' and search for 'Pod Point.
 

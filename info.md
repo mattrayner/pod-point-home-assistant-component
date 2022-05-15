@@ -34,6 +34,8 @@ Platform | Description
 
 ## Configuration is done in the UI
 
+> **NOTE:** Due to support for energy sensors and multiple Pod Point accounts, upgrading from <0.3 is not supported. You should remove your pod point configuration and re-configure it after upgrading.
+
 Once you have installed either manually or via HACS, restart your home assistant instance and then setup the component by choosing 'Add integration' and search for 'Pod Point.
 
 ## Satuses
@@ -85,11 +87,17 @@ Solo 3 Tethered | /api/pod_point/static/2c-03.png
 ```yaml
 type: entities
 entities:
-  - entity: sensor.pod_status
-    name: Status
-  - entity: binary_sensor.cable_status
-    name: Cable
-  - entity: switch.charging_allowed
+  - entity: binary_sensor.psl_xxxxxx_cable_status
+    name: Cable Status
+  - entity: sensor.psl_xxxxxx_status
+    name: Pod Status
+  - entity: switch.psl_xxxxxx_charging_allowed
+    name: Charging Allowed
+  - entity: sensor.psl_xxxxxx_current_energy
+    name: Current Energy
+  - entity: sensor.psl_xxxxxx_total_energy
+    name: Total Energy
+    secondary_info: none
 title: Pod Point
 header:
   type: picture
@@ -115,7 +123,7 @@ If you want to contribute to this please read the [Contribution guidelines](CONT
 [commits]: https://github.com/mattrayner/pod-point-home-assistant-component/commits/master
 [hacs]: https://github.com/custom-components/hacs
 [hacsbadge]: https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge
-[exampleimg]: https://github.com/mattrayner/pod-point-home-assistant-component/raw/ef2c39788cdcd85d08a9adab1c06d74c51d38993/example.png
+[exampleimg]: https://github.com/mattrayner/pod-point-home-assistant-component/raw/76752c0d0dbef64fc482140b7d0937c2b19faab0/example.png
 [whichpodimg]: https://github.com/mattrayner/pod-point-home-assistant-component/raw/ef2c39788cdcd85d08a9adab1c06d74c51d38993/which_pod.png
 [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge
 [forum]: https://community.home-assistant.io/
