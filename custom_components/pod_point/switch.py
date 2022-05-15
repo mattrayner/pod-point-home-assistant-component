@@ -39,9 +39,12 @@ class PodPointBinarySwitch(PodPointEntity, SwitchEntity):
         await self.coordinator.async_request_refresh()
 
     @property
-    def name(self):
-        """Return the name of the switch."""
-        return "Charging Allowed"
+    def unique_id(self):
+        return f"{super().unique_id}_charging_allowed"
+
+    @property
+    def name(self) -> str:
+        return f"{self.pod.ppid} Charging Allowed"
 
     @property
     def icon(self):

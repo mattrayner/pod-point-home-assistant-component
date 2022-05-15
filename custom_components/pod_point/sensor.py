@@ -65,6 +65,15 @@ class PodPointSensor(
         """Return the name of the sensor."""
         return "Pod Status"
 
+
+    @property
+    def unique_id(self):
+        return f"{super().unique_id}_status"
+
+    @property
+    def name(self) -> str:
+        return f"{self.pod.ppid} Status"
+
     @property
     def native_value(self):
         """Return the native value of the sensor."""
@@ -153,15 +162,6 @@ class PodPointTotalEnergySensor(PodPointSensor):
     @property
     def native_unit_of_measurement(self) -> str:
         return ENERGY_KILO_WATT_HOUR
-
-    @property
-    def last_reset(self) -> datetime:
-        charges_count = len(self.pod.charges) - 1
-        if charges_count <= 0:
-            return datetime.now(tz=timezone.utc)
-
-        # Get the start date of the first charge
-        return self.pod.charges[charges_count].starts_at - timedelta(seconds=10)
 
     @property
     def icon(self):

@@ -40,9 +40,12 @@ class PodPointBinarySensor(PodPointEntity, BinarySensorEntity):
         }
 
     @property
-    def name(self):
-        """Return the name of the binary_sensor."""
-        return "Cable Status"
+    def unique_id(self):
+        return f"{super().unique_id}_cable_status"
+
+    @property
+    def name(self) -> str:
+        return f"{self.pod.ppid} Cable Status"
 
     @property
     def device_class(self):
