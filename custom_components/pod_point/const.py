@@ -1,11 +1,12 @@
 """Constants for integration_blueprint."""
-from podpointclient.version import __version__ as pp_version
+from podpointclient.version import __version__ as pod_point_client_version
+from .version import __version__ as integration_version
 
 # Base component constants
 NAME = "Pod Point"
 DOMAIN = "pod_point"
 DOMAIN_DATA = f"{DOMAIN}_data"
-VERSION = "0.3.0"
+VERSION = integration_version
 ATTRIBUTION = "Data provided by https://pod-point.com/"
 ISSUE_URL = "https://github.com/mattrayner/pod-point-home-assistant-component/issues"
 
@@ -102,7 +103,7 @@ APP_IMAGE_URL_BASE = f"/api/{DOMAIN}/static"
 STARTUP_MESSAGE = f"""
 -------------------------------------------------------------------
 {NAME}
-Version: {VERSION} (podpointclient={pp_version})
+Version: {VERSION} (podpointclient={pod_point_client_version})
 This is a custom integration!
 If you have any issues with this you need to open an issue here:
 {ISSUE_URL}

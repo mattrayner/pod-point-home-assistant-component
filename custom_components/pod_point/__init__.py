@@ -11,13 +11,14 @@ from pathlib import Path
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Config, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from podpointclient.client import PodPointClient
 from podpointclient.pod import Pod
 from podpointclient.charge import Charge
+from podpointclient.errors import AuthError, SessionError
 
 from typing import List, Dict
 
@@ -134,6 +135,8 @@ class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
 
             self.pods = list(pods_by_id.values())
             return self.pods
+        except (AuthError, SessionError) as exception:
+            raise ConfigEntryAuthFailed(exception) from exception
         except Exception as exception:
             _LOGGER.error(exception)
             raise UpdateFailed() from exception
