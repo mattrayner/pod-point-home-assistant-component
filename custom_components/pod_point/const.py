@@ -5,7 +5,7 @@ from podpointclient.version import __version__ as pp_version
 NAME = "Pod Point"
 DOMAIN = "pod_point"
 DOMAIN_DATA = f"{DOMAIN}_data"
-VERSION = "0.3.0-rc"
+VERSION = "0.3.0-rc2"
 ATTRIBUTION = "Data provided by https://pod-point.com/"
 ISSUE_URL = "https://github.com/mattrayner/pod-point-home-assistant-component/issues"
 
