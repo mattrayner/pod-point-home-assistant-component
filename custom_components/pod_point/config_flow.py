@@ -54,7 +54,10 @@ class BlueprintFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
             if valid:
-                existing_entry = await self.async_set_unique_id(DOMAIN)
+                existing_entry = await self.async_set_unique_id(
+                    user_input[CONF_EMAIL].lower()
+                )
+
                 if existing_entry:
                     self.hass.config_entries.async_update_entry(
                         existing_entry, title=user_input[CONF_EMAIL], data=user_input

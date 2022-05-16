@@ -18,7 +18,8 @@
         },
         "abort": {
             "single_instance_allowed": "Only a single instance is allowed.",
-            "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+            "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+            "already_configured": "Pod is already configured"
         }
     },
     "options": {
