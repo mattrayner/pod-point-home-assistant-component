@@ -18,17 +18,17 @@
         },
         "abort": {
             "single_instance_allowed": "Only a single instance is allowed.",
-            "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-            "already_configured": "Pod is already configured"
+            "reauth_successful": "Re-authentication was successful",
+            "already_configured": "Pod is already configured."
         }
     },
     "options": {
         "step": {
             "user": {
                 "data": {
-                    "binary_sensor": "Cable status enabled",
-                    "sensor": "Pod status and energy sensors enabled",
-                    "switch": "Charching switch enabled",
+                    "binary_sensor": "Cable status sensor enabled.",
+                    "sensor": "Pod status and energy sensors enabled.",
+                    "switch": "Charching switch enabled.",
                     "scan_interval": "Poll interval (seconds)"
                 }
             }

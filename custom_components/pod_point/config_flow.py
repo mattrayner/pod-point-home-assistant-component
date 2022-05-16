@@ -11,7 +11,6 @@ from .const import (
     CONF_EMAIL,
     DOMAIN,
     PLATFORMS,
-    ENERGY,
     CONF_SCAN_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
 )
@@ -58,11 +57,13 @@ class BlueprintFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input[CONF_EMAIL].lower()
                 )
 
+                # If an entry exists, update it and show the re-auth message
                 if existing_entry:
                     self.hass.config_entries.async_update_entry(
                         existing_entry, title=user_input[CONF_EMAIL], data=user_input
                     )
                     await self.hass.config_entries.async_reload(existing_entry.entry_id)
+                    return self.async_abort(reason="reauth_successful")
 
                 return self.async_create_entry(
                     title=user_input[CONF_EMAIL], data=user_input

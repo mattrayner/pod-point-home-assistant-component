@@ -1,16 +1,15 @@
 """Binary sensor platform for integration_blueprint."""
 import logging
+from typing import Dict, Any
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from .const import (
     ATTR_STATE,
-    ATTR_STATE_CONNECTED_WAITING,
     BINARY_SENSOR_DEVICE_CLASS,
     DOMAIN,
-    CHARGING_FLAG,
 )
 from .entity import PodPointEntity
-from typing import Dict, Any
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 

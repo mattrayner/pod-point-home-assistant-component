@@ -1,34 +1,24 @@
 """Sensor platform for integration_blueprint."""
 import logging
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from typing import Dict, Any
-from homeassistant.core import callback
-from podpointclient.pod import Pod
-from .const import ATTRIBUTION, DOMAIN
-
 from datetime import datetime, timedelta, timezone
+
+from podpointclient.pod import Pod
 
 from homeassistant.components.sensor import (
     STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
-
-from .entity import PodPointEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     DEVICE_CLASS_ENERGY,
 )
+from homeassistant.core import callback
 
-from .const import (
-    ATTR_STATE,
-    DOMAIN,
-    ICON,
-    ICON_1C,
-    ICON_2C,
-)
-from .entity import PodPointEntity, NAME
+from .const import ATTR_STATE, ATTRIBUTION, DOMAIN, ICON, ICON_1C, ICON_2C
+from .entity import PodPointEntity
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -59,12 +49,6 @@ class PodPointSensor(
     @property
     def device_class(self) -> str:
         return f"{DOMAIN}__pod"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return "Pod Status"
-
 
     @property
     def unique_id(self):

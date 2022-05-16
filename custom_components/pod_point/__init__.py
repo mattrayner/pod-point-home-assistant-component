@@ -8,6 +8,7 @@ import asyncio
 from datetime import timedelta
 import logging
 from pathlib import Path
+from typing import List, Dict
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Config, HomeAssistant
@@ -20,7 +21,6 @@ from podpointclient.pod import Pod
 from podpointclient.charge import Charge
 from podpointclient.errors import AuthError, SessionError
 
-from typing import List, Dict
 
 from .const import (
     APP_IMAGE_URL_BASE,
@@ -136,7 +136,10 @@ class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
             self.pods = list(pods_by_id.values())
             return self.pods
         except (AuthError, SessionError) as exception:
-            raise ConfigEntryAuthFailed(exception) from exception
+            _LOGGER.debug("Recommending re-auth: %s", exception)
+            raise ConfigEntryAuthFailed(
+                "There was a problem logging in with your account."
+            ) from exception
         except Exception as exception:
             _LOGGER.error(exception)
             raise UpdateFailed() from exception

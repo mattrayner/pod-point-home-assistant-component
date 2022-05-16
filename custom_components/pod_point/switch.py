@@ -1,5 +1,6 @@
 """Switch platform for integration_blueprint."""
 import logging
+
 from homeassistant.components.switch import SwitchEntity
 from podpointclient.client import PodPointClient
 
