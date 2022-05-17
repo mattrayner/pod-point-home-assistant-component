@@ -10,6 +10,8 @@ from homeassistant.config_entries import ConfigEntry
 from podpointclient.pod import Pod
 from podpointclient.schedule import Schedule
 
+from .coordinator import PodPointDataUpdateCoordinator
+
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 from .const import (
@@ -93,6 +95,11 @@ class PodPointEntity(CoordinatorEntity):
             return f"{DOMAIN}_{self.pod.id}_{self.pod.ppid}"
         else:
             return self.config_entry.entry_id
+
+    @property
+    def available(self) -> bool:
+        c: PodPointDataUpdateCoordinator = self.coordinator
+        return c.online == True
 
     @property
     def device_info(self) -> Dict[str, Any]:

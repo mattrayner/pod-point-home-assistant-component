@@ -10,13 +10,17 @@ from .const import (
     DOMAIN,
 )
 from .entity import PodPointEntity
+from .coordinator import PodPointDataUpdateCoordinator
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
 async def async_setup_entry(hass, entry, async_add_devices):
     """Setup binary_sensor platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: PodPointDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    # Handle coordinator offline on boot - no data will be populated
+    if coordinator.online is False:
+        return
 
     sensors = []
     for i in range(len(coordinator.data)):

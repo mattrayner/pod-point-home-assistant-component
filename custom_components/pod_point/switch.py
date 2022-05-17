@@ -6,15 +6,20 @@ from podpointclient.client import PodPointClient
 
 from .const import DOMAIN, SWITCH_ICON
 from .entity import PodPointEntity
+from .coordinator import PodPointDataUpdateCoordinator
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
 async def async_setup_entry(hass, entry, async_add_devices):
     """Setup sensor platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: PodPointDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    # Handle coordinator offline on boot - no data will be populated
+    if coordinator.online is False:
+        return
 
     switches = []
+
     for i in range(len(coordinator.data)):
         switch = PodPointBinarySwitch(coordinator, entry, i)
 
