@@ -1,4 +1,4 @@
-"""Test integration_blueprint setup process."""
+"""Test pod_point setup process."""
 from homeassistant.exceptions import ConfigEntryNotReady
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry

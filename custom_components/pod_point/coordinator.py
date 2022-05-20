@@ -80,12 +80,14 @@ class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
 
         except ApiConnectionError as exception:
             if self.online is not False:
-                _LOGGER.warning(f"Unable to connect to Pod Point. ({exception})")
+                _LOGGER.warning("Unable to connect to Pod Point. (%s)", exception)
 
             self.online = False
             _LOGGER.debug(exception)
 
-            raise UpdateFailed("Unable to connect to Pod Point. Retrying")
+            raise UpdateFailed(
+                "Unable to connect to Pod Point. Retrying"
+            ) from exception
 
         except (AuthError, SessionError) as exception:
             _LOGGER.debug("Recommending re-auth: %s", exception)
@@ -95,7 +97,8 @@ class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
             ) from exception
         except Exception as exception:
             _LOGGER.warning(
-                "Recieved an unexpected exception when updating data from Pod Point. If this issue persists, please contact the developer."
+                "Recieved an unexpected exception when updating data from Pod Point. \
+                If this issue persists, please contact the developer."
             )
             _LOGGER.error(exception)
             raise UpdateFailed() from exception

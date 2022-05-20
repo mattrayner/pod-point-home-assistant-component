@@ -93,13 +93,13 @@ class PodPointEntity(CoordinatorEntity):
         """Return a unique ID to use for this entity."""
         if self.pod.id:
             return f"{DOMAIN}_{self.pod.id}_{self.pod.ppid}"
-        else:
-            return self.config_entry.entry_id
+
+        return self.config_entry.entry_id
 
     @property
     def available(self) -> bool:
-        c: PodPointDataUpdateCoordinator = self.coordinator
-        return c.online == True
+        typed_coordinator: PodPointDataUpdateCoordinator = self.coordinator
+        return typed_coordinator.online is True
 
     @property
     def device_info(self) -> Dict[str, Any]:
@@ -150,12 +150,15 @@ class PodPointEntity(CoordinatorEntity):
         if schedule_active is False:
             return True
 
-        start_time = list(map(lambda x: int(x), schedule_for_day.start_time.split(":")))
+        def to_int(stringy_int):
+            return int(stringy_int)
+
+        start_time = list(map(to_int, schedule_for_day.start_time.split(":")))
         start_date = datetime.now().replace(
             hour=start_time[0], minute=start_time[1], second=start_time[2]
         )
 
-        end_time = list(map(lambda x: int(x), schedule_for_day.end_time.split(":")))
+        end_time = list(map(to_int, schedule_for_day.end_time.split(":")))
         end_day = schedule_for_day.end_day
         end_date = None
         if end_day < weekday:
@@ -221,7 +224,8 @@ class PodPointEntity(CoordinatorEntity):
         # If pod state is None, but state is set, return the state
         if pod_state is None and state is not None:
             return state
-        elif state is None and pod_state is not None:
+
+        if state is None and pod_state is not None:
             return pod_state
 
         try:
@@ -232,7 +236,6 @@ class PodPointEntity(CoordinatorEntity):
         try:
             pod_rank = ranking.index(pod_state)
         except ValueError:
-
             pod_rank = 100
 
         winner = state if state_rank >= pod_rank else pod_state

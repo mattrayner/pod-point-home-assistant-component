@@ -1,4 +1,4 @@
-"""Sensor platform for integration_blueprint."""
+"""Sensor platform for pod_point."""
 import logging
 from typing import Dict, Any
 from datetime import datetime, timedelta, timezone
@@ -49,7 +49,7 @@ class PodPointSensor(
     PodPointEntity,
     SensorEntity,
 ):
-    """integration_blueprint Sensor class."""
+    """pod_point Sensor class."""
 
     @property
     def device_class(self) -> str:
@@ -167,6 +167,7 @@ class PodPointTotalEnergySensor(PodPointSensor):
 
     @property
     def is_on(self) -> bool:
+        """This sensor is on when the given pod is connected to a vehicle"""
         return self.connected
 
 

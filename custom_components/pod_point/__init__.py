@@ -1,8 +1,8 @@
 """
-Custom integration to integrate integration_blueprint with Home Assistant.
+Custom integration to integrate pod_point with Home Assistant.
 
 For more details about this integration, please refer to
-https://github.com/custom-components/integration_blueprint
+https://github.com/mattrayner/pod-point-home-assistant-component
 """
 import asyncio
 from datetime import timedelta
@@ -36,7 +36,7 @@ from .const import (
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
-
+# pylint: disable=unused-argument
 async def async_setup(hass: HomeAssistant, config: Config):
     """Set up this integration using YAML is not supported."""
     return True
@@ -44,6 +44,7 @@ async def async_setup(hass: HomeAssistant, config: Config):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up this integration using UI."""
+    # If data for pod_point is not setup, prime it
     if hass.data.get(DOMAIN) is None:
         hass.data.setdefault(DOMAIN, {})
         _LOGGER.info(STARTUP_MESSAGE)
@@ -54,16 +55,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     session = async_get_clientsession(hass)
     client = PodPointClient(username=email, password=password, session=session)
 
+    # If a scan interval is set, use that, or default
     try:
         scan_interval = timedelta(seconds=entry.options[CONF_SCAN_INTERVAL])
     except KeyError:
         scan_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
 
+    # Setup our data coordinator with the desired scan interval
     coordinator = PodPointDataUpdateCoordinator(
         hass, client=client, scan_interval=scan_interval
     )
-    await coordinator.async_config_entry_first_refresh()
+    await coordinator.async_config_entry_first_refresh()  # Check the credentials we have and ensure that we can perform a refresh
 
+    # Given a successful inital refresh, store this coordinator for this specific config entry
+    hass.data[DOMAIN][entry.entry_id] = coordinator
+
+    # Setup static image asset serving
     should_cache = False
     files_path = Path(__file__).parent / "static"
     if hass.http:
@@ -71,8 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             APP_IMAGE_URL_BASE, str(files_path), should_cache
         )
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator
-
+    # For every platform defined, check if the user has disabled it. If not, set it up
     for platform in PLATFORMS:
         if entry.options.get(platform, True):
             coordinator.platforms.append(platform)
@@ -104,5 +110,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload config entry."""
-    await async_unload_entry(hass, entry)
+    unloaded = await async_unload_entry(hass, entry)
+    if unloaded is False:
+        _LOGGER.error("Error unloading entry: %s", entry)
+
     await async_setup_entry(hass, entry)

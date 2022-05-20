@@ -1,4 +1,4 @@
-"""Test integration_blueprint switch."""
+"""Test pod_point switch."""
 import asyncio
 
 import aiohttp
@@ -37,8 +37,8 @@ async def test_switch_services(hass, bypass_get_data):
         )
         assert title_func.called
 
-        flag = title_func.call_args.kwargs['enabled']
-        pod_type = type(title_func.call_args.kwargs['pod'])
+        flag = title_func.call_args.kwargs["enabled"]
+        pod_type = type(title_func.call_args.kwargs["pod"])
         assert True == flag
         assert Pod == pod_type
 
@@ -52,7 +52,7 @@ async def test_switch_services(hass, bypass_get_data):
         )
         assert title_func.called
 
-        flag = title_func.call_args.kwargs['enabled']
-        pod_type = type(title_func.call_args.kwargs['pod'])
+        flag = title_func.call_args.kwargs["enabled"]
+        pod_type = type(title_func.call_args.kwargs["pod"])
         assert False == flag
         assert Pod == pod_type

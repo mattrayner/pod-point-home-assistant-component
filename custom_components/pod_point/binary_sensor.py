@@ -1,4 +1,4 @@
-"""Binary sensor platform for integration_blueprint."""
+"""Binary sensor platform for pod_point."""
 import logging
 from typing import Dict, Any
 
@@ -32,7 +32,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
 
 
 class PodPointBinarySensor(PodPointEntity, BinarySensorEntity):
-    """integration_blueprint binary_sensor class."""
+    """pod_point binary_sensor class."""
 
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:

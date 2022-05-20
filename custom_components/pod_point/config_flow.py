@@ -1,4 +1,4 @@
-"""Adds config flow for Blueprint."""
+"""Adds config flow for Pod Point."""
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -16,8 +16,8 @@ from .const import (
 )
 
 
-class BlueprintFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Config flow for Blueprint."""
+class PodPointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+    """Config flow for Pod Point."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
@@ -26,6 +26,7 @@ class BlueprintFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self._errors = {}
 
+    # pylint: disable=unused-argument
     async def async_step_reauth(self, user_input=None):
         """Perform reauth upon an API authentication error."""
         return await self.async_step_reauth_confirm()
@@ -47,38 +48,33 @@ class BlueprintFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # if self._async_current_entries():
         #     return self.async_abort(reason="single_instance_allowed")
 
-        if user_input is not None:
-            valid = await self._test_credentials(
-                user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
-            )
-
-            if valid:
-                existing_entry = await self.async_set_unique_id(
-                    user_input[CONF_EMAIL].lower()
-                )
-
-                # If an entry exists, update it and show the re-auth message
-                if existing_entry:
-                    self.hass.config_entries.async_update_entry(
-                        existing_entry, title=user_input[CONF_EMAIL], data=user_input
-                    )
-                    await self.hass.config_entries.async_reload(existing_entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
-
-                return self.async_create_entry(
-                    title=user_input[CONF_EMAIL], data=user_input
-                )
-            else:
-                self._errors["base"] = "auth"
+        if user_input is None:
+            user_input = {}
+            # Provide defaults for form
+            user_input[CONF_EMAIL] = ""
+            user_input[CONF_PASSWORD] = ""
 
             return await self._show_config_form(user_input)
 
-        user_input = {}
-        # Provide defaults for form
-        user_input[CONF_EMAIL] = ""
-        user_input[CONF_PASSWORD] = ""
+        valid = await self._test_credentials(
+            user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
+        )
 
-        return await self._show_config_form(user_input)
+        if valid is False:
+            self._errors["base"] = "auth"
+            return await self._show_config_form(user_input)
+
+        existing_entry = await self.async_set_unique_id(user_input[CONF_EMAIL].lower())
+
+        # If an entry exists, update it and show the re-auth message
+        if existing_entry:
+            self.hass.config_entries.async_update_entry(
+                existing_entry, title=user_input[CONF_EMAIL], data=user_input
+            )
+            await self.hass.config_entries.async_reload(existing_entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
+
+        return self.async_create_entry(title=user_input[CONF_EMAIL], data=user_input)
 
     @staticmethod
     @callback

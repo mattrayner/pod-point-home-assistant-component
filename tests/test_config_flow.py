@@ -1,4 +1,4 @@
-"""Test integration_blueprint config flow."""
+"""Test pod_point config flow."""
 from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow
@@ -11,7 +11,7 @@ from custom_components.pod_point.const import (
     PLATFORMS,
     SENSOR,
     SWITCH,
-    CONF_SCAN_INTERVAL
+    CONF_SCAN_INTERVAL,
 )
 
 from .const import MOCK_CONFIG
@@ -140,4 +140,9 @@ async def test_options_flow(hass):
     assert result["title"] == "test@example.com"
 
     # Verify that the options were updated
-    assert entry.options == {BINARY_SENSOR: True, SENSOR: False, SWITCH: True, CONF_SCAN_INTERVAL: 300}
+    assert entry.options == {
+        BINARY_SENSOR: True,
+        SENSOR: False,
+        SWITCH: True,
+        CONF_SCAN_INTERVAL: 300,
+    }

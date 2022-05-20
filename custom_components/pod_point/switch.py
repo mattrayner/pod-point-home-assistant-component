@@ -1,4 +1,4 @@
-"""Switch platform for integration_blueprint."""
+"""Switch platform for pod_point."""
 import logging
 
 from homeassistant.components.switch import SwitchEntity
