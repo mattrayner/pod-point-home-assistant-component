@@ -32,7 +32,7 @@ async def test_switch_services(hass, bypass_get_data):
         await hass.services.async_call(
             SWITCH,
             SERVICE_TURN_OFF,
-            service_data={ATTR_ENTITY_ID: "switch.charging_allowed"},
+            service_data={ATTR_ENTITY_ID: "switch.psl_123456_charging_allowed"},
             blocking=True,
         )
         assert title_func.called
@@ -47,7 +47,7 @@ async def test_switch_services(hass, bypass_get_data):
         await hass.services.async_call(
             SWITCH,
             SERVICE_TURN_ON,
-            service_data={ATTR_ENTITY_ID: "switch.charging_allowed"},
+            service_data={ATTR_ENTITY_ID: "switch.psl_123456_charging_allowed"},
             blocking=True,
         )
         assert title_func.called
