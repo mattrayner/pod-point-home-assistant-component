@@ -19,6 +19,7 @@ from unittest.mock import patch
 from .fixtures import CHARGES_COMPLETE_FIXTURE, POD_COMPLETE_FIXTURE
 
 from podpointclient.factories import PodFactory, ChargeFactory
+from podpointclient.errors import AuthError
 
 import pytest
 
@@ -75,6 +76,6 @@ def error_get_data_fixture():
     """Simulate error when retrieving data from API."""
     with patch(
         "podpointclient.client.PodPointClient.async_get_pods",
-        side_effect=Exception,
+        side_effect=AuthError,
     ):
         yield

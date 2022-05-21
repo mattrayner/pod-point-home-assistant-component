@@ -4,3 +4,5 @@ venv
 .venv
 .coverage
 .idea
+htmlcov
+.DS_STORE

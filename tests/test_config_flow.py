@@ -7,6 +7,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.pod_point.const import (
     BINARY_SENSOR,
+    CONF_PASSWORD,
     DOMAIN,
     PLATFORMS,
     SENSOR,
@@ -61,57 +62,64 @@ async def test_successful_config_flow(hass, bypass_get_data):
 # Here we simiulate a successful reauth config flow from the backend.
 # Note that we use the `bypass_get_data` fixture here because
 # we want the config flow validation to succeed during the test.
-# async def test_reauth_config_flow(hass, bypass_get_data):
-#     """Test a successful config flow."""
-#     # Initialize a config flow
-#     result = await hass.config_entries.flow.async_init(
-#         DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
-#     )
+async def test_reauth_config_flow(hass, bypass_get_data):
+    """Test a successful config flow."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
+    entry.add_to_hass(hass)
 
-#     # Check that the config flow shows the reauth form as the first step
-#     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-#     assert result["step_id"] == "reauth_confirm"
+    # Initialize a config flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
+    )
 
-#     # If a user were to enter `test_username` for username and `test_password`
-#     # for password, it would result in this function call
-#     r2 = await hass.config_entries.flow.async_configure(
-#         result["flow_id"],  # user_input=MOCK_CONFIG
-#     )
+    # Check that the config flow shows the reauth form as the first step
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "reauth_confirm"
 
-#     print(result)
-#     # print(hass.config_entries["test@example.com"])
+    # If a user were to confirm the re-auth start, this function call
+    result_2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
 
-#     result = await hass.config_entries.async_update_entry(
-#         result["flow_id"], data={ "data": MOCK_CONFIG }
-#     )
+    # It should load the user form
+    assert result_2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result_2["step_id"] == "user"
 
-#     # Check that the config flow is complete and a new entry is created with
-#     # the input data
-#     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-#     assert result["title"] == "Re authention: test@example.com"
-#     assert result["data"] == MOCK_CONFIG
-#     assert result["result"]
+    updated_config = MOCK_CONFIG
+    updated_config[CONF_PASSWORD] = "NewH8x0rP455!"
+
+    # If a user entered a new password, this would happen
+    result_3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=updated_config
+    )
+
+    # Check that the config flow is complete and a new entry is created with
+    # the input data
+    assert result_3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result_3["title"] == "test@example.com"
+    assert result_3["data"] == MOCK_CONFIG
+    assert result_3["result"]
 
 
-# # In this case, we want to simulate a failure during the config flow.
-# # We use the `error_on_get_data` mock instead of `bypass_get_data`
-# # (note the function parameters) to raise an Exception during
-# # validation of the input config.
-# async def test_failed_config_flow(hass, error_on_get_data):
-#     """Test a failed config flow due to credential validation failure."""
-#     result = await hass.config_entries.flow.async_init(
-#         DOMAIN, context={"source": config_entries.SOURCE_USER}
-#     )
+# In this case, we want to simulate a failure during the config flow.
+# We use the `error_on_get_data` mock instead of `bypass_get_data`
+# (note the function parameters) to raise an Exception during
+# validation of the input config.
+async def test_failed_config_flow(hass, error_on_get_data):
+    """Test a failed config flow due to credential validation failure."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
-#     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-#     assert result["step_id"] == "user"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
 
-#     result = await hass.config_entries.flow.async_configure(
-#         result["flow_id"], user_input=MOCK_CONFIG
-#     )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_CONFIG
+    )
 
-#     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-#     assert result["errors"] == {"base": "auth"}
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "auth"}
 
 
 # Our config flow also has an options flow, so we must test it as well.

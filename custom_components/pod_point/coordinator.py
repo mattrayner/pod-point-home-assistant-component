@@ -98,15 +98,12 @@ class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
         except Exception as exception:
             _LOGGER.warning(
                 "Recieved an unexpected exception when updating data from Pod Point. \
-                If this issue persists, please contact the developer."
+If this issue persists, please contact the developer."
             )
             _LOGGER.error(exception)
             raise UpdateFailed() from exception
 
     def __group_pods_by_unit_id(self) -> Dict[int, Pod]:
-        if self.pod_dict is not None:
-            return self.pod_dict
-
         pod_dict: Dict[int, Pod] = {}
         for pod in self.pods:
             pod_dict[pod.unit_id] = pod
