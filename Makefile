@@ -18,4 +18,11 @@ install-deps:
 	pip3 install -r requirements.txt -r requirements_dev.txt -r requirements_test.txt
 
 test:
-	python3 -m pytest
+	python3 -m pytest \
+            -qq \
+            --timeout=9 \
+            --durations=10 \
+            --cov custom_components.pod_point \
+            -o console_output_style=count \
+            -p no:sugar \
+            tests
