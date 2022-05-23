@@ -32,7 +32,7 @@ from .const import (
 class PodPointEntity(CoordinatorEntity):
     """Pod Point Entity"""
 
-    def __init__(self, coordinator, config_entry: ConfigEntry, idx: int):
+    def __init__(self, coordinator: PodPointDataUpdateCoordinator, config_entry: ConfigEntry, idx: int):
         super().__init__(coordinator)
         self.pod_id = idx
         self.config_entry = config_entry

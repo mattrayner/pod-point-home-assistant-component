@@ -35,7 +35,7 @@ from .const import MOCK_CONFIG
 from unittest.mock import Mock
 
 
-async def setup_sensors(hass):
+async def setup_sensors(hass) -> List[PodPointSensor]:
     """Setup sensors within the test environment"""
     coordinator = await coordinator_with_data(hass)
 
