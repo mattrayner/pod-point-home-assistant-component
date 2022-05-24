@@ -23,6 +23,7 @@ Platform | Description
 `switch` | Enable/disable  charging.
 
 ![example][exampleimg]
+![example][chargetimeimg]
 
 ## Installation
 
@@ -136,6 +137,24 @@ header:
 state_color: true
 ```
 
+### Entity YAML examples:
+
+#### Long format charge time
+```yaml
+type: entity
+entity: sensor.psl_xxxxxx_completed_charge_time
+attribute: long
+name: Completed Charge Time (long)
+```
+
+#### Standard format charge time
+```yaml
+type: entity
+entity: sensor.psl_266056_completed_charge_time
+name: Completed Charge Time
+attribute: formatted
+```
+
 ## Contributions are welcome!
 
 If you want to contribute to this please read the [Contribution guidelines](CONTRIBUTING.md)
@@ -161,6 +180,7 @@ make test
 [pod_point]: https://github.com/mattrayner/pod-point-home-assistant-component
 [buymecoffee]: https://www.buymeacoffee.com/mattrayner
 [buymecoffeebadge]: https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg?style=for-the-badge
+[chargetimeimg]: https://github.com/mattrayner/pod-point-home-assistant-component/raw/3c7ebf994caf8eb5814859edc724e418c3e5746a/charge_time.png
 [commits-shield]: https://img.shields.io/github/commit-activity/y/mattrayner/pod-point-home-assistant-component.svg?style=for-the-badge
 [commits]: https://github.com/mattrayner/pod-point-home-assistant-component/commits/master
 [hacs]: https://github.com/custom-components/hacs
