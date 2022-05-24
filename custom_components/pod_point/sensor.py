@@ -35,10 +35,12 @@ async def async_setup_entry(hass, entry, async_add_devices):
 
     for i in range(len(coordinator.data)):
         pps = PodPointSensor(coordinator, entry, i)
+        ppcts = PodPointChargeTimeSensor(coordinator, entry, i)
         pptes = PodPointTotalEnergySensor(coordinator, entry, i)
         ppces = PodPointCurrentEnergySensor(coordinator, entry, i)
 
         sensors.append(pps)
+        sensors.append(ppcts)
         sensors.append(pptes)
         sensors.append(ppces)
 
@@ -88,6 +90,56 @@ class PodPointSensor(
     @property
     def entity_picture(self) -> str:
         return self.image
+
+
+class PodPointChargeTimeSensor(
+    PodPointEntity,
+    SensorEntity,
+):
+    """pod_point Sensor class."""
+
+    @property
+    def device_class(self) -> str:
+        return f"{DOMAIN}__pod_charge_time"
+
+    @property
+    def unique_id(self):
+        return f"{super().unique_id}_charge_time"
+
+    @property
+    def name(self) -> str:
+        return f"{self.pod.ppid} Completed Charge Time"
+
+    @property
+    def extra_state_attributes(self) -> Dict[str, Any]:
+        return {
+            "raw": self.pod.total_charge_seconds,
+            "formatted": str(timedelta(seconds=self.pod.total_charge_seconds)),
+            "long": self._td_format(timedelta(seconds=self.pod.total_charge_seconds)),
+        }
+
+    @property
+    def native_value(self):
+        """Return the native value of the sensor."""
+        return self.extra_state_attributes["raw"]
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit for this sensor."""
+        return "seconds"
+
+    @property
+    def icon(self):
+        """Return the icon of the sensor."""
+        return "mdi:timer"
+
+    @property
+    def entity_picture(self) -> str:
+        return None
+
+    @property
+    def state_class(self) -> str:
+        return STATE_CLASS_TOTAL_INCREASING
 
 
 class PodPointTotalEnergySensor(PodPointSensor):

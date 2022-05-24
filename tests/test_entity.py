@@ -189,6 +189,7 @@ async def test_pod_point_entity(hass, bypass_get_data):
         'suggested_area': 'Outside',
         'timezone': 'UTC',
         'total_kwh': 0.0,
+        'total_charge_seconds': 0,
         'unit_connectors': [
             {
                 'connector': {

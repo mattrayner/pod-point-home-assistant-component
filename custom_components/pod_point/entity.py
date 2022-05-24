@@ -32,7 +32,12 @@ from .const import (
 class PodPointEntity(CoordinatorEntity):
     """Pod Point Entity"""
 
-    def __init__(self, coordinator: PodPointDataUpdateCoordinator, config_entry: ConfigEntry, idx: int):
+    def __init__(
+        self,
+        coordinator: PodPointDataUpdateCoordinator,
+        config_entry: ConfigEntry,
+        idx: int,
+    ):
         super().__init__(coordinator)
         self.pod_id = idx
         self.config_entry = config_entry
@@ -49,6 +54,7 @@ class PodPointEntity(CoordinatorEntity):
             "integration": DOMAIN,
             "suggested_area": "Outside",
             "total_kwh": pod.total_kwh,
+            "total_charge_seconds": pod.total_charge_seconds,
             "current_kwh": pod.current_kwh,
         }
 
@@ -264,3 +270,27 @@ class PodPointEntity(CoordinatorEntity):
 
     def __model_slug(self) -> List[str]:
         return self.model.upper()[3:8].split("-")
+
+    def _td_format(self, td_object):
+        seconds = int(td_object.total_seconds())
+        periods = [
+            ("year", 60 * 60 * 24 * 365),
+            ("month", 60 * 60 * 24 * 30),
+            ("day", 60 * 60 * 24),
+            ("hour", 60 * 60),
+            ("minute", 60),
+            ("second", 1),
+        ]
+
+        strings = []
+        for period_name, period_seconds in periods:
+            if seconds > period_seconds:
+                period_value, seconds = divmod(seconds, period_seconds)
+                has_s = "s" if period_value > 1 else ""
+                strings.append("%s %s%s" % (period_value, period_name, has_s))
+
+        output = "0s"
+        if len(strings) > 0:
+            output = ", ".join(strings)
+
+        return output
