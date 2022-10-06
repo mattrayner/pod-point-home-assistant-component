@@ -70,7 +70,7 @@ custom_components/pod_point/switch.py
 
 Once you have installed either manually or via HACS, restart your home assistant instance and then setup the component by choosing 'Add integration' and search for 'Pod Point.
 
-## Satuses
+## Statuses
 
 Multiple statuses are reported by the main pod sensor. The statuses and their meaning are shown below:
 
