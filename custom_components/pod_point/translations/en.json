@@ -28,7 +28,7 @@
                 "data": {
                     "binary_sensor": "Cable status sensor enabled.",
                     "sensor": "Pod status and energy sensors enabled.",
-                    "switch": "Charching switch enabled.",
+                    "switch": "Charging switch enabled.",
                     "scan_interval": "Poll interval (seconds)"
                 }
             }
