@@ -15,6 +15,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.pod_point import async_setup_entry
 from custom_components.pod_point.const import (
+    CONF_CURRENCY,
     DEFAULT_NAME,
     DOMAIN,
     SENSOR,
@@ -70,14 +71,14 @@ async def test_sensor_creation(hass, bypass_get_data):
 
     (_, sensors) = await setup_sensors(hass)
 
-    assert 4 == len(sensors)
+    assert 5 == len(sensors)
 
 
 async def test_status_pod_sensor(hass, bypass_get_data):
     """Tests for pod status sensor."""
     (_, sensors) = await setup_sensors(hass)
 
-    [status, _, _, _] = sensors
+    [status, _, _, _, _] = sensors
 
     assert "pod_point__pod" == status.device_class
     assert "pod_point_12234_PSL-123456_status" == status.unique_id
@@ -109,7 +110,7 @@ async def test_total_energy_pod_sensor(hass, bypass_get_data):
     (_, sensors) = await setup_sensors(hass)
 
     total_energy: PodPointTotalEnergySensor
-    [_, _, total_energy, _] = sensors
+    [_, _, total_energy, _, _] = sensors
 
     total_energy.async_write_ha_state = Mock()
     total_energy._handle_coordinator_update()
@@ -143,7 +144,7 @@ async def test_current_energy_pod_sensor(hass, bypass_get_data):
     """Tests for pod current energy sensor."""
     (_, sensors) = await setup_sensors(hass)
 
-    [_, _, _, current_energy] = sensors
+    [_, _, _, current_energy, _] = sensors
 
     assert (
         "pod_point_12234_PSL-123456_status_total_energy_current_charge_energy"
@@ -165,7 +166,7 @@ async def test_total_charge_time_pod_sensor(hass, bypass_get_data):
     """Tests for pod total charge time sensor."""
     (_, sensors) = await setup_sensors(hass)
 
-    [_, charge_time, _, _] = sensors
+    [_, charge_time, _, _, _] = sensors
 
     assert "pod_point_12234_PSL-123456_charge_time" == charge_time.unique_id
 
@@ -219,3 +220,62 @@ async def test_total_charge_time_pod_sensor(hass, bypass_get_data):
         "long": "2 years, 1 month, 8 days",
         "raw": 66355200,
     } == charge_time.extra_state_attributes
+
+
+async def test_total_cost_pod_sensor(hass, bypass_get_data):
+    """Tests for pod total charge time sensor."""
+    (_, sensors) = await setup_sensors(hass)
+
+    [_, _, _, _, total_cost] = sensors
+
+    assert "pod_point_12234_PSL-123456_total_cost" == total_cost.unique_id
+
+    assert "PSL-123456 Total Cost" == total_cost.name
+
+    assert "monetary" == total_cost.device_class
+    assert 0 == total_cost.native_value
+    assert {
+        "amount": 0.0,
+        "currency": "GBP",
+        "formatted": "0.0 GBP",
+        "raw": 0,
+    } == total_cost.extra_state_attributes
+    assert "mdi:cash-multiple" == total_cost.icon
+
+    total_cost.pod.total_cost = 61
+    assert 0.61 == total_cost.native_value
+    assert {
+        "amount": 0.61,
+        "currency": "GBP",
+        "formatted": "0.61 GBP",
+        "raw": 61,
+    } == total_cost.extra_state_attributes
+
+    total_cost.pod.total_cost = 9945
+    assert 99.45 == total_cost.native_value
+    assert {
+        "amount": 99.45,
+        "currency": "GBP",
+        "formatted": "99.45 GBP",
+        "raw": 9945,
+    } == total_cost.extra_state_attributes
+
+    total_cost.pod.total_cost = 175545
+    assert 1755.45 == total_cost.native_value
+    assert {
+        "amount": 1755.45,
+        "currency": "GBP",
+        "formatted": "1755.45 GBP",
+        "raw": 175545,
+    } == total_cost.extra_state_attributes
+
+    total_cost.pod.total_cost = 2764800
+    assert 27648.00 == total_cost.native_value
+    assert {
+        "amount": 27648.0,
+        "currency": "GBP",
+        "formatted": "27648.0 GBP",
+        "raw": 2764800,
+    } == total_cost.extra_state_attributes
+
+    assert total_cost.currency == "GBP"

@@ -7,6 +7,8 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.pod_point.const import (
     BINARY_SENSOR,
+    CONF_CURRENCY,
+    CONF_HTTP_DEBUG,
     CONF_PASSWORD,
     DOMAIN,
     PLATFORMS,
@@ -153,4 +155,6 @@ async def test_options_flow(hass):
         SENSOR: False,
         SWITCH: True,
         CONF_SCAN_INTERVAL: 300,
+        CONF_HTTP_DEBUG: False,
+        CONF_CURRENCY: "GBP",
     }
