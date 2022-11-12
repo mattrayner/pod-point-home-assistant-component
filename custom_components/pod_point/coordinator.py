@@ -68,6 +68,9 @@ class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
                 pod.total_kwh = pod.total_kwh + charge.kwh_used
                 pod.total_charge_seconds = pod.total_charge_seconds + charge.duration
 
+                charge_cost = charge.energy_cost or 0
+                pod.total_cost = pod.total_cost + charge_cost
+
                 if charge.ends_at is None:
                     pod.current_kwh = charge.kwh_used
 

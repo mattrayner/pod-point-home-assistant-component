@@ -27,9 +27,10 @@
             "user": {
                 "data": {
                     "binary_sensor": "Cable status sensor enabled.",
-                    "sensor": "Pod status and energy sensors enabled.",
+                    "sensor": "Pod status, energy and cost sensors enabled.",
                     "switch": "Charging switch enabled.",
-                    "scan_interval": "Poll interval (seconds)"
+                    "scan_interval": "Poll interval (seconds)",
+                    "http_debug": "Enable verbose HTTP logging."
                 }
             }
         }

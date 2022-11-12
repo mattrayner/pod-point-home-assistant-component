@@ -24,9 +24,13 @@ from .coordinator import PodPointDataUpdateCoordinator
 
 from .const import (
     APP_IMAGE_URL_BASE,
+    CONF_CURRENCY,
     CONF_PASSWORD,
     CONF_EMAIL,
+    CONF_HTTP_DEBUG,
     CONF_SCAN_INTERVAL,
+    DEFAULT_CURRENCY,
+    DEFAULT_HTTP_DEBUG,
     DOMAIN,
     PLATFORMS,
     STARTUP_MESSAGE,
@@ -53,7 +57,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     password = entry.data.get(CONF_PASSWORD)
 
     session = async_get_clientsession(hass)
-    client = PodPointClient(username=email, password=password, session=session)
+
+    # If http debug is set, use that, or default
+    try:
+        http_debug = entry.options[CONF_HTTP_DEBUG]
+    except KeyError:
+        http_debug = DEFAULT_HTTP_DEBUG
+
+    client = PodPointClient(
+        username=email, password=password, session=session, http_debug=http_debug
+    )
 
     # If a scan interval is set, use that, or default
     try:

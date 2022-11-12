@@ -14,10 +14,20 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_MONETARY,
 )
 from homeassistant.core import callback
 
-from .const import ATTR_STATE, ATTRIBUTION, DOMAIN, ICON, ICON_1C, ICON_2C
+from .const import (
+    ATTR_STATE,
+    ATTRIBUTION,
+    CONF_CURRENCY,
+    DEFAULT_CURRENCY,
+    DOMAIN,
+    ICON,
+    ICON_1C,
+    ICON_2C,
+)
 from .entity import PodPointEntity
 from .coordinator import PodPointDataUpdateCoordinator
 
@@ -38,11 +48,13 @@ async def async_setup_entry(hass, entry, async_add_devices):
         ppcts = PodPointChargeTimeSensor(coordinator, entry, i)
         pptes = PodPointTotalEnergySensor(coordinator, entry, i)
         ppces = PodPointCurrentEnergySensor(coordinator, entry, i)
+        pptcs = PodPointTotalCostSensor(coordinator, entry, i)
 
         sensors.append(pps)
         sensors.append(ppcts)
         sensors.append(pptes)
         sensors.append(ppces)
+        sensors.append(pptcs)
 
     async_add_devices(sensors)
 
@@ -259,3 +271,63 @@ class PodPointCurrentEnergySensor(PodPointTotalEnergySensor):
             icon = "mdi:car-electric"
 
         return icon
+
+
+class PodPointTotalCostSensor(
+    PodPointEntity,
+    SensorEntity,
+):
+    """pod_point total cost sensor class."""
+
+    @property
+    def device_class(self) -> str:
+        return DEVICE_CLASS_MONETARY
+
+    @property
+    def unique_id(self):
+        return f"{super().unique_id}_total_cost"
+
+    @property
+    def name(self) -> str:
+        return f"{self.pod.ppid} Total Cost"
+
+    @property
+    def currency(self) -> str:
+        """Which currency type are we returning?"""
+
+        try:
+            currency = self.config_entry.options[CONF_CURRENCY]
+        except KeyError:
+            currency = DEFAULT_CURRENCY
+
+        return currency
+
+    @property
+    def extra_state_attributes(self) -> Dict[str, Any]:
+        cost_as_pounds = self.pod.total_cost / 100
+
+        return {
+            "raw": self.pod.total_cost,
+            "amount": cost_as_pounds,
+            "currency": self.currency,
+            "formatted": f"{cost_as_pounds} {self.currency}",
+        }
+
+    @property
+    def native_value(self):
+        """Return the native value of the sensor."""
+        return self.extra_state_attributes["amount"]
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit for this sensor."""
+        return self.extra_state_attributes["currency"]
+
+    @property
+    def icon(self):
+        """Return the icon of the sensor."""
+        return "mdi:cash-multiple"
+
+    @property
+    def entity_picture(self) -> str:
+        return None

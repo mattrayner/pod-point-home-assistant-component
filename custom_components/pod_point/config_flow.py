@@ -7,12 +7,16 @@ import voluptuous as vol
 from podpointclient.client import PodPointClient
 
 from .const import (
+    CONF_HTTP_DEBUG,
     CONF_PASSWORD,
     CONF_EMAIL,
+    DEFAULT_HTTP_DEBUG,
     DOMAIN,
     PLATFORMS,
     CONF_SCAN_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
+    CONF_CURRENCY,
+    DEFAULT_CURRENCY,
 )
 
 
@@ -126,6 +130,13 @@ class PodPointOptionsFlowHandler(config_entries.OptionsFlow):
             self.options.update(user_input)
             return await self._update_options()
 
+        currency_schema = {
+            vol.Required(
+                CONF_CURRENCY,
+                default=self.options.get(CONF_CURRENCY, DEFAULT_CURRENCY),
+            ): str
+        }
+
         poll_schema = {
             vol.Required(
                 CONF_SCAN_INTERVAL,
@@ -141,7 +152,16 @@ class PodPointOptionsFlowHandler(config_entries.OptionsFlow):
             for x in sorted(PLATFORMS)
         }
 
-        options_schema = vol.Schema({**poll_schema, **platforms_schema})
+        debug_schema = {
+            vol.Required(
+                CONF_HTTP_DEBUG,
+                default=self.options.get(CONF_HTTP_DEBUG, DEFAULT_HTTP_DEBUG),
+            ): bool
+        }
+
+        options_schema = vol.Schema(
+            {**currency_schema, **poll_schema, **platforms_schema, **debug_schema}
+        )
 
         return self.async_show_form(step_id="user", data_schema=options_schema)
 

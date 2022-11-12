@@ -20,7 +20,12 @@ Platform | Description
 `sensor` | Show info from Pod Point API.
 `sensor` (Total Energy) | Show a combined KWh value from all charges for a given pod.
 `sensor` (Current Charge Energy) | Show the KWh for the current charge session (or 0).
+`sensor` (*Total Cost) | Show the total cost of all ***completed* charges.
 `switch` | Enable/disable  charging.
+
+> ***Total cost is based on the energy provider and kWh cost set in Pod Point.**
+
+>****Charges are considered complete by Pod Point when you disconnect the vehicle, not when power delivery stops.**
 
 ![example][exampleimg]
 ![example][chargetimeimg]
@@ -126,6 +131,8 @@ entities:
   - entity: sensor.psl_xxxxxx_total_energy
     name: Total Energy
     secondary_info: none
+  - entity: sensor.psl_xxxxxx_total_cost
+    name: Total Cost (completed charges)
 title: Pod Point
 header:
   type: picture
@@ -185,7 +192,7 @@ make test
 [commits]: https://github.com/mattrayner/pod-point-home-assistant-component/commits/master
 [hacs]: https://github.com/custom-components/hacs
 [hacsbadge]: https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge
-[exampleimg]: https://github.com/mattrayner/pod-point-home-assistant-component/raw/76752c0d0dbef64fc482140b7d0937c2b19faab0/example.png
+[exampleimg]: https://github.com/mattrayner/pod-point-home-assistant-component/raw/ceb52c5c65d820624050c8faf8a1358e14b74ae1/example.png
 [whichpodimg]: https://github.com/mattrayner/pod-point-home-assistant-component/raw/ef2c39788cdcd85d08a9adab1c06d74c51d38993/which_pod.png
 [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge
 [forum]: https://community.home-assistant.io/
