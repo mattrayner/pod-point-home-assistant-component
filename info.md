@@ -128,7 +128,7 @@ name: Completed Charge Time (long)
 #### Standard format charge time
 ```yaml
 type: entity
-entity: sensor.psl_266056_completed_charge_time
+entity: sensor.psl_xxxxxx_completed_charge_time
 name: Completed Charge Time
 attribute: formatted
 ```
