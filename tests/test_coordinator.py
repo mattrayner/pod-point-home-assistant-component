@@ -70,6 +70,7 @@ async def test_coordinator_refresh(hass, bypass_get_data):
     pod = coordinator.data[0]
     assert isinstance(pod, Pod)
     assert len(pod.charges) == 9
+    assert pod.last_charge_cost == 116
 
 
 # Test refreshes with connection errors fail as expected

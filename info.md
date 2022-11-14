@@ -20,7 +20,13 @@ Platform | Description
 `sensor` | Show info from Pod Point API.
 `sensor` (Total Energy) | Show a combined KWh value from all charges for a given pod.
 `sensor` (Current Charge Energy) | Show the KWh for the current charge session (or 0).
+`sensor` (*Total Cost) | Show the total cost of all ***completed* charges.
+`sensor` (Last ***Completed* Charge Cost) | Show the total cost of the last ***completed* charge.
 `switch` | Enable/disable  charging.
+
+> ***Total cost is based on the energy provider and kWh cost set in Pod Point.**
+
+>****Charges are considered complete by Pod Point when you disconnect the vehicle, not when power delivery stops.**
 
 ![example][exampleimg]
 ![example][chargetimeimg]
@@ -39,7 +45,7 @@ Platform | Description
 
 Once you have installed either manually or via HACS, restart your home assistant instance and then setup the component by choosing 'Add integration' and search for 'Pod Point.
 
-## Satuses
+## Statuses
 
 Multiple statuses are reported by the main pod sensor. The statuses and their meaning are shown below:
 
@@ -59,10 +65,6 @@ We populate two energy sensors for each pod connected to your account. These are
 If you want to add Pod Point stats to the built in energy dashboard, you should add the `Current Charge Energy` sensor as a device. This sensor reports when the value is reset and should allow you to track the energy usage of your pod.
 
 > *Note:* The Pod Point APIs perform some rounding on the kWh values returned meaning they may be sightly lower than the true energy consumed. We are unable to address this within the component.
-
-### Known energy issues:
-
-1. If you repeatedly restart your home assistant instance whilst actively charging, the energy dashboard will add your kWh together showning a higher value. e.g. 3.2kWh restarted twice would show 9.6kWh (3.2kWh + 3.2kWh + 3.2kWh).
 
 ## Lovelace examples
 
@@ -98,7 +100,10 @@ entities:
     name: Current Energy
   - entity: sensor.psl_xxxxxx_total_energy
     name: Total Energy
-    secondary_info: none
+  - entity: sensor.psl_xxxxxx_last_complete_charge_cost
+    name: Last Completed Charge Cost
+  - entity: sensor.psl_xxxxxx_total_cost
+    name: Total Cost (completed charges)
 title: Pod Point
 header:
   type: picture
@@ -143,7 +148,7 @@ If you want to contribute to this please read the [Contribution guidelines](CONT
 [commits]: https://github.com/mattrayner/pod-point-home-assistant-component/commits/master
 [hacs]: https://github.com/custom-components/hacs
 [hacsbadge]: https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge
-[exampleimg]: https://github.com/mattrayner/pod-point-home-assistant-component/raw/76752c0d0dbef64fc482140b7d0937c2b19faab0/example.png
+[exampleimg]: https://github.com/mattrayner/pod-point-home-assistant-component/raw/94a36148c598353b8494b1dc9e8277a208c1c185/example.png
 [whichpodimg]: https://github.com/mattrayner/pod-point-home-assistant-component/raw/ef2c39788cdcd85d08a9adab1c06d74c51d38993/which_pod.png
 [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge
 [forum]: https://community.home-assistant.io/

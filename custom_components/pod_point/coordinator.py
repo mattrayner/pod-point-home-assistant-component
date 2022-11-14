@@ -1,6 +1,7 @@
 """
 Data coordinator for pod point client
 """
+from datetime import datetime
 import logging
 from typing import List, Dict
 
@@ -56,6 +57,7 @@ class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
 
             pods_by_id = self.__group_pods_by_unit_id()
 
+            last_completed_charge: Charge = None
             charge: Charge
             for charge in home_charges:
                 unit_id = charge.pod.id
@@ -71,7 +73,14 @@ class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
                 charge_cost = charge.energy_cost or 0
                 pod.total_cost = pod.total_cost + charge_cost
 
-                if charge.ends_at is None:
+                if charge.ends_at is not None:
+                    if last_completed_charge is None or (
+                        charge.ends_at > last_completed_charge.ends_at
+                        and charge.energy_cost is not None
+                    ):
+                        last_completed_charge = charge
+                        setattr(pod, "last_charge_cost", charge.energy_cost)
+                else:
                     pod.current_kwh = charge.kwh_used
 
             self.pods = list(pods_by_id.values())

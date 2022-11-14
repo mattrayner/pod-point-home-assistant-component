@@ -49,12 +49,14 @@ async def async_setup_entry(hass, entry, async_add_devices):
         pptes = PodPointTotalEnergySensor(coordinator, entry, i)
         ppces = PodPointCurrentEnergySensor(coordinator, entry, i)
         pptcs = PodPointTotalCostSensor(coordinator, entry, i)
+        pplcccs = PodPointLastCompleteChargeCostSensor(coordinator, entry, i)
 
         sensors.append(pps)
         sensors.append(ppcts)
         sensors.append(pptes)
         sensors.append(ppces)
         sensors.append(pptcs)
+        sensors.append(pplcccs)
 
     async_add_devices(sensors)
 
@@ -327,6 +329,71 @@ class PodPointTotalCostSensor(
     def icon(self):
         """Return the icon of the sensor."""
         return "mdi:cash-multiple"
+
+    @property
+    def entity_picture(self) -> str:
+        return None
+
+
+class PodPointLastCompleteChargeCostSensor(
+    PodPointEntity,
+    SensorEntity,
+):
+    """pod_point cost of last complete charge sensor class."""
+
+    @property
+    def device_class(self) -> str:
+        return DEVICE_CLASS_MONETARY
+
+    @property
+    def unique_id(self):
+        return f"{super().unique_id}_last_complete_charge_cost"
+
+    @property
+    def name(self) -> str:
+        return f"{self.pod.ppid} Last Complete Charge Cost"
+
+    @property
+    def currency(self) -> str:
+        """Which currency type are we returning?"""
+
+        try:
+            currency = self.config_entry.options[CONF_CURRENCY]
+        except KeyError:
+            currency = DEFAULT_CURRENCY
+
+        return currency
+
+    @property
+    def extra_state_attributes(self) -> Dict[str, Any]:
+        raw = 0
+        cost_as_pounds = 0.0
+
+        if getattr(self.pod, "last_charge_cost", None) is not None:
+            raw = getattr(self.pod, "last_charge_cost", None)
+            cost_as_pounds = raw / 100
+
+        return {
+            "raw": raw,
+            "amount": cost_as_pounds,
+            "currency": self.currency,
+            "formatted": f"{cost_as_pounds} {self.currency}",
+        }
+
+    @property
+    def native_value(self):
+        """Return the native value of the sensor."""
+        return self.extra_state_attributes["amount"]
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit for this sensor."""
+        return self.extra_state_attributes["currency"]
+
+    @property
+    def icon(self):
+        """Return the icon of the sensor."""
+        return "mdi:cash"
 
     @property
     def entity_picture(self) -> str:
