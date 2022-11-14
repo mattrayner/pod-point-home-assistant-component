@@ -66,6 +66,17 @@ If you want to add Pod Point stats to the built in energy dashboard, you should 
 
 > *Note:* The Pod Point APIs perform some rounding on the kWh values returned meaning they may be sightly lower than the true energy consumed. We are unable to address this within the component.
 
+## Cost sensors
+
+In order to provide the `Total Cost` and `Last Completed Charge Cost` sensors, we are using `energy_cost` values provided from Pod Point per ***completed* charge. There are some caveats to bare in mind here:
+
+* Energy use for each charge is rounded by Pod Point (see [Energy sensors](#energy-sensors) above) and energy costs are calculated on this rounded value.
+* You must set an accurate kWh cost within the Pod Point app (and keep this up to date if your provider/cost per kWh changes
+
+> Give the above rounding, in my opinion the cost values should be used as a guide rather than taken as gospel
+
+>**Charges are considered complete by Pod Point when you disconnect the vehicle, not when power delivery stops.
+
 ## Lovelace examples
 
 ### Header images
