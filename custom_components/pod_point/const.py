@@ -105,6 +105,9 @@ BASE_API_URL = "https://api.pod-point.com/" + BASE_API_VERSION
 # Image serving
 APP_IMAGE_URL_BASE = f"/api/{DOMAIN}/static"
 
+# Pod refresh includes
+LIMITED_POD_INCLUDES = ["statuses", "charge_schedules"]
+
 STARTUP_MESSAGE = f"""
 -------------------------------------------------------------------
 {NAME}

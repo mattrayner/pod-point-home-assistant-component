@@ -18,7 +18,7 @@ install-deps:
 	pip3 install -r requirements.txt -r requirements_dev.txt -r requirements_test.txt
 
 test:
-	python3 -m pytest \
+	pytest \
 		-vv \
 		-qq \
 		--timeout=9 \

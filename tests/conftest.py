@@ -58,13 +58,17 @@ def bypass_get_data_fixture():
     charges = charge_factory.build_charges(CHARGES_COMPLETE_FIXTURE)
 
     with patch(
-        "podpointclient.client.PodPointClient.async_get_pods", return_value=pods
+        "podpointclient.client.PodPointClient.async_get_all_pods", return_value=pods
     ), patch(
         "podpointclient.client.PodPointClient.async_get_pod", return_value=pod
     ), patch(
         "podpointclient.client.PodPointClient.async_set_schedule", return_value=True
     ), patch(
-        "podpointclient.client.PodPointClient.async_get_charges", return_value=charges
+        "podpointclient.client.PodPointClient.async_get_all_charges",
+        return_value=charges,
+    ), patch(
+        "podpointclient.client.PodPointClient.async_credentials_verified",
+        return_value=True,
     ):
         yield
 

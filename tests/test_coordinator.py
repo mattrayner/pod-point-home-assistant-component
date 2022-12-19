@@ -58,7 +58,7 @@ async def subject_with_data_offline(hass) -> PodPointDataUpdateCoordinator:
 async def test_coordinator_refresh(hass, bypass_get_data):
     """Test entry setup and unload."""
     coordinator: PodPointDataUpdateCoordinator = await subject(hass)
-    assert coordinator.online == None
+    assert coordinator.online is None
 
     coordinator.online = False
 

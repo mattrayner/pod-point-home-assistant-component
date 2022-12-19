@@ -105,8 +105,7 @@ class PodPointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             client = PodPointClient(
                 username=username, password=password, session=session
             )
-            await client.async_get_pods()
-            return True
+            return await client.async_credentials_verified()
         except Exception:  # pylint: disable=broad-except
             pass
         return False
