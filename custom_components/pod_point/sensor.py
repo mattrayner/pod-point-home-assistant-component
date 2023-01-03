@@ -9,12 +9,11 @@ from homeassistant.components.sensor import (
     STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
+    SensorDeviceClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_MONETARY,
 )
 from homeassistant.core import callback
 
@@ -204,7 +203,7 @@ class PodPointTotalEnergySensor(PodPointSensor):
 
     @property
     def device_class(self) -> str:
-        return DEVICE_CLASS_ENERGY
+        return SensorDeviceClass.ENERGY
 
     @property
     def state_class(self) -> str:
@@ -283,7 +282,7 @@ class PodPointTotalCostSensor(
 
     @property
     def device_class(self) -> str:
-        return DEVICE_CLASS_MONETARY
+        return SensorDeviceClass.MONETARY
 
     @property
     def unique_id(self):
@@ -343,7 +342,7 @@ class PodPointLastCompleteChargeCostSensor(
 
     @property
     def device_class(self) -> str:
-        return DEVICE_CLASS_MONETARY
+        return SensorDeviceClass.MONETARY
 
     @property
     def unique_id(self):
