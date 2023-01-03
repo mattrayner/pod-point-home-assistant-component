@@ -22,6 +22,7 @@ Platform | Description
 `sensor` (Current Charge Energy) | Show the KWh for the current charge session (or 0).
 `sensor` (*Total Cost) | Show the total cost of all ***completed* charges.
 `sensor` (Last ***Completed* Charge Cost) | Show the total cost of the last ***completed* charge.
+`sensor` (Completed charge time) | Show a combined 'charge time' value from all charges for a given pod.
 `switch` | Enable/disable  charging.
 
 > ***Total cost is based on the energy provider and kWh cost set in Pod Point.**

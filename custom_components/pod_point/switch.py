@@ -30,6 +30,10 @@ async def async_setup_entry(hass, entry, async_add_devices):
 class PodPointBinarySwitch(PodPointEntity, SwitchEntity):
     """pod_point switch class."""
 
+    _attr_has_entity_name = True
+    _attr_name = "Charging Allowed"
+    _attr_icon = SWITCH_ICON
+
     async def async_turn_on(self, **kwargs):  # pylint: disable=unused-argument
         """Allow charging (clear schedule)"""
         api: PodPointClient = self.coordinator.api
@@ -47,15 +51,6 @@ class PodPointBinarySwitch(PodPointEntity, SwitchEntity):
     @property
     def unique_id(self):
         return f"{super().unique_id}_charging_allowed"
-
-    @property
-    def name(self) -> str:
-        return f"{self.pod.ppid} Charging Allowed"
-
-    @property
-    def icon(self):
-        """Return the icon of this switch."""
-        return SWITCH_ICON
 
     @property
     def is_on(self):

@@ -19,14 +19,12 @@ ICON_EV_STATION = "mdi:ev-station"
 
 SWITCH_ICON = ICON_EV_STATION
 
-# Device classes
-BINARY_SENSOR_DEVICE_CLASS = "plug"
-
 # Platforms
 BINARY_SENSOR = "binary_sensor"
 SENSOR = "sensor"
 SWITCH = "switch"
-PLATFORMS = [BINARY_SENSOR, SENSOR, SWITCH]
+UPDATE = "update"
+PLATFORMS = [BINARY_SENSOR, SENSOR, SWITCH, UPDATE]
 ENERGY = "energy"
 
 # Configuration and options
@@ -36,7 +34,8 @@ CONF_PASSWORD = "password"
 CONF_SCAN_INTERVAL = "scan_interval"
 DEFAULT_SCAN_INTERVAL = 300
 CONF_HTTP_DEBUG = "http_debug"
-DEFAULT_HTTP_DEBUG = False
+# DEFAULT_HTTP_DEBUG = False
+DEFAULT_HTTP_DEBUG = True
 CONF_CURRENCY = "currancy"
 DEFAULT_CURRENCY = "GBP"
 

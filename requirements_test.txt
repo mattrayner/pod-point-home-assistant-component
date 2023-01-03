@@ -1,1 +1,2 @@
-pytest-homeassistant-custom-component==0.5.14
+pytest-homeassistant-custom-component==0.12.43
+pytest-asyncio

@@ -1,2 +1,2 @@
-podpointclient==1.0.0
+podpointclient==1.1.0
 StrEnum>=0.4<0.5
