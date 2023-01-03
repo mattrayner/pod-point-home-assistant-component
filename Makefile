@@ -11,7 +11,7 @@ setup: update-pip install-deps test
 
 update-pip:
 	python3 -m pip install -U pip
-	pip3 install -U setuptools wheel
+	pip3 install -U setuptools wheel aiodiscover scapy
 
 install-deps:
 	pip3 install ruamel.yaml

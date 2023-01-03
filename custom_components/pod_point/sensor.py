@@ -4,21 +4,26 @@ from typing import Dict, Any
 from datetime import datetime, timedelta, timezone
 
 from podpointclient.pod import Pod
+from podpointclient.user import User
 
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.components.sensor import (
-    STATE_CLASS_TOTAL,
-    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorDeviceClass,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-)
 from homeassistant.core import callback
+from homeassistant.const import UnitOfTime, UnitOfEnergy
 
 from .const import (
     ATTR_STATE,
+    ATTR_STATE_AVAILABLE,
+    ATTR_STATE_CHARGING,
+    ATTR_STATE_CONNECTED_WAITING,
+    ATTR_STATE_OUT_OF_SERVICE,
+    ATTR_STATE_UNAVAILABLE,
+    ATTR_STATE_WAITING,
     ATTRIBUTION,
     CONF_CURRENCY,
     DEFAULT_CURRENCY,
@@ -49,6 +54,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
         ppces = PodPointCurrentEnergySensor(coordinator, entry, i)
         pptcs = PodPointTotalCostSensor(coordinator, entry, i)
         pplcccs = PodPointLastCompleteChargeCostSensor(coordinator, entry, i)
+        balance = PodPointAccountBalanceEntity(coordinator, entry)
 
         sensors.append(pps)
         sensors.append(ppcts)
@@ -56,6 +62,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
         sensors.append(ppces)
         sensors.append(pptcs)
         sensors.append(pplcccs)
+        sensors.append(balance)
 
     async_add_devices(sensors)
 
@@ -66,17 +73,22 @@ class PodPointSensor(
 ):
     """pod_point Sensor class."""
 
-    @property
-    def device_class(self) -> str:
-        return f"{DOMAIN}__pod"
+    _attr_options = [
+        ATTR_STATE_AVAILABLE,
+        ATTR_STATE_UNAVAILABLE,
+        ATTR_STATE_CHARGING,
+        ATTR_STATE_OUT_OF_SERVICE,
+        ATTR_STATE_WAITING,
+        ATTR_STATE_CONNECTED_WAITING,
+    ]
+    _attr_translation_key = "status"
+    _attr_has_entity_name = True
+    _attr_name = "Status"
+    _attr_device_class = SensorDeviceClass.ENUM
 
     @property
     def unique_id(self):
         return f"{super().unique_id}_status"
-
-    @property
-    def name(self) -> str:
-        return f"{self.pod.ppid} Status"
 
     @property
     def native_value(self):
@@ -111,17 +123,16 @@ class PodPointChargeTimeSensor(
 ):
     """pod_point Sensor class."""
 
-    @property
-    def device_class(self) -> str:
-        return f"{DOMAIN}__pod_charge_time"
+    _attr_has_entity_name = True
+    _attr_name = "Completed Charge Time"
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_native_unit_of_measurement = UnitOfTime.SECONDS
+    _attr_icon = "mdi:timer"
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     @property
     def unique_id(self):
         return f"{super().unique_id}_charge_time"
-
-    @property
-    def name(self) -> str:
-        return f"{self.pod.ppid} Completed Charge Time"
 
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
@@ -137,26 +148,20 @@ class PodPointChargeTimeSensor(
         return self.extra_state_attributes["raw"]
 
     @property
-    def native_unit_of_measurement(self):
-        """Return the unit for this sensor."""
-        return "seconds"
-
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return "mdi:timer"
-
-    @property
     def entity_picture(self) -> str:
         return None
-
-    @property
-    def state_class(self) -> str:
-        return STATE_CLASS_TOTAL_INCREASING
 
 
 class PodPointTotalEnergySensor(PodPointSensor):
     """pod_point total energy Sensor class."""
+
+    _attr_options = None  # Override the options from PodPointSensor (prevents an error as this sensor is an 'energy' type)
+    _attr_translation_key = None
+    _attr_has_entity_name = True
+    _attr_name = "Total Energy"
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     def __init__(self, coordinator, config_entry: ConfigEntry, idx: int):
         super().__init__(coordinator, config_entry=config_entry, idx=idx)
@@ -198,24 +203,8 @@ class PodPointTotalEnergySensor(PodPointSensor):
         return f"{super().unique_id}_total_energy"
 
     @property
-    def name(self) -> str:
-        return f"{self.pod.ppid} Total Energy"
-
-    @property
-    def device_class(self) -> str:
-        return SensorDeviceClass.ENERGY
-
-    @property
-    def state_class(self) -> str:
-        return STATE_CLASS_TOTAL_INCREASING
-
-    @property
     def native_value(self) -> float:
         return self.pod.total_kwh
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        return ENERGY_KILO_WATT_HOUR
 
     @property
     def icon(self):
@@ -239,21 +228,17 @@ class PodPointTotalEnergySensor(PodPointSensor):
 class PodPointCurrentEnergySensor(PodPointTotalEnergySensor):
     """pod_point current charge energy Sensor class."""
 
+    _attr_has_entity_name = True
+    _attr_name = "Current Energy"
+    _attr_state_class = SensorStateClass.TOTAL
+
     @property
     def unique_id(self):
         return f"{super().unique_id}_current_charge_energy"
 
     @property
-    def name(self) -> str:
-        return f"{self.pod.ppid} Current Energy"
-
-    @property
     def native_value(self) -> float:
         return self.pod.current_kwh
-
-    @property
-    def state_class(self) -> str:
-        return STATE_CLASS_TOTAL
 
     @property
     def last_reset(self) -> datetime:
@@ -280,22 +265,20 @@ class PodPointTotalCostSensor(
 ):
     """pod_point total cost sensor class."""
 
-    @property
-    def device_class(self) -> str:
-        return SensorDeviceClass.MONETARY
+    _attr_has_entity_name = True
+    _attr_name = "Total Cost"
+    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_icon = "mdi:cash-multiple"
 
     @property
     def unique_id(self):
         return f"{super().unique_id}_total_cost"
 
     @property
-    def name(self) -> str:
-        return f"{self.pod.ppid} Total Cost"
-
-    @property
     def currency(self) -> str:
         """Which currency type are we returning?"""
 
+        # TODO - Should we use the default currency from HA here? Seems weird to specify a aeperate value here...
         try:
             currency = self.config_entry.options[CONF_CURRENCY]
         except KeyError:
@@ -325,11 +308,6 @@ class PodPointTotalCostSensor(
         return self.extra_state_attributes["currency"]
 
     @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return "mdi:cash-multiple"
-
-    @property
     def entity_picture(self) -> str:
         return None
 
@@ -340,17 +318,14 @@ class PodPointLastCompleteChargeCostSensor(
 ):
     """pod_point cost of last complete charge sensor class."""
 
-    @property
-    def device_class(self) -> str:
-        return SensorDeviceClass.MONETARY
+    _attr_has_entity_name = True
+    _attr_name = "Last Completed Charge Cost"
+    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_icon = "mdi:cash"
 
     @property
     def unique_id(self):
         return f"{super().unique_id}_last_complete_charge_cost"
-
-    @property
-    def name(self) -> str:
-        return f"{self.pod.ppid} Last Complete Charge Cost"
 
     @property
     def currency(self) -> str:
@@ -390,10 +365,75 @@ class PodPointLastCompleteChargeCostSensor(
         return self.extra_state_attributes["currency"]
 
     @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return "mdi:cash"
-
-    @property
     def entity_picture(self) -> str:
         return None
+
+
+class PodPointAccountBalanceEntity(CoordinatorEntity, SensorEntity):
+    """Pod Point Balance Entity"""
+
+    _attr_translation_key = "account_balance"
+    _attr_has_entity_name = True
+    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_name = "Pod Point Balance"
+    _attr_icon = "mdi:account-cash"
+    _attr_available = False
+
+    @property
+    def native_value(self):
+        """Return the value of the balance sensor"""
+        return self.balance
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit for this sensor."""
+        return self.user.account.currency
+
+    def __update_attrs(self):
+        if self.available is False:
+            return
+
+        user: User = self.user
+
+        attrs = {"attribution": ATTRIBUTION, "uuid": self.uuid, "integration": DOMAIN}
+
+        attrs.update(user.dict)
+        self._attr_state = self.balance
+        self._attr_extra_state_attributes = attrs
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.__update_attrs()
+        self.async_write_ha_state()
+
+    @property
+    def user(self) -> User:
+        """Return the underlying pod that drives this entity"""
+        user: User = self.coordinator.user
+        return user
+
+    @property
+    def uuid(self) -> str:
+        """Return the user uuid"""
+        return self.user.account.uid
+
+    @property
+    def balance(self) -> float:
+        """Return a balance float"""
+        raw_balance = self.user.account.balance
+
+        if raw_balance is None or raw_balance <= 0:
+            return 0.0
+
+        return raw_balance / 100
+
+    @property
+    def unique_id(self):
+        """Return a unique ID to use for this entity."""
+        return self.uuid
+
+    @property
+    def available(self) -> bool:
+        typed_coordinator: PodPointDataUpdateCoordinator = self.coordinator
+        return typed_coordinator.online is True

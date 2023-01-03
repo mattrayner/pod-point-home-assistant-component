@@ -1,7 +1,10 @@
 """Test pod_point config flow."""
+from types import MappingProxyType
 from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import dhcp
+from homeassistant.core import HomeAssistant
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -14,10 +17,17 @@ from custom_components.pod_point.const import (
     PLATFORMS,
     SENSOR,
     SWITCH,
+    UPDATE,
     CONF_SCAN_INTERVAL,
 )
 
 from .const import MOCK_CONFIG
+
+DHCP_SERVICE_INFO = dhcp.DhcpServiceInfo(
+     hostname="podpoint-245EBE000000",
+     ip="192.168.1.200",
+     macaddress="245EBE000000",
+ )
 
 
 # This fixture bypasses the actual setup of the integration
@@ -36,6 +46,7 @@ def bypass_setup_fixture():
 # Here we simiulate a successful config flow from the backend.
 # Note that we use the `bypass_get_data` fixture here because
 # we want the config flow validation to succeed during the test.
+@pytest.mark.asyncio
 async def test_successful_config_flow(hass, bypass_get_data):
     """Test a successful config flow."""
     # Initialize a config flow
@@ -64,6 +75,7 @@ async def test_successful_config_flow(hass, bypass_get_data):
 # Here we simiulate a successful reauth config flow from the backend.
 # Note that we use the `bypass_get_data` fixture here because
 # we want the config flow validation to succeed during the test.
+@pytest.mark.asyncio
 async def test_reauth_config_flow(hass, bypass_get_data):
     """Test a successful config flow."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
@@ -107,6 +119,7 @@ async def test_reauth_config_flow(hass, bypass_get_data):
 # We use the `error_on_get_data` mock instead of `bypass_get_data`
 # (note the function parameters) to raise an Exception during
 # validation of the input config.
+@pytest.mark.asyncio
 async def test_failed_config_flow(hass, error_on_get_data):
     """Test a failed config flow due to credential validation failure."""
     result = await hass.config_entries.flow.async_init(
@@ -125,7 +138,8 @@ async def test_failed_config_flow(hass, error_on_get_data):
 
 
 # Our config flow also has an options flow, so we must test it as well.
-async def test_options_flow(hass):
+@pytest.mark.asyncio
+async def test_options_flow(hass, bypass_get_data):
     """Test an options flow."""
     # Create a new MockConfigEntry and add to HASS (we're bypassing config
     # flow entirely)
@@ -150,11 +164,54 @@ async def test_options_flow(hass):
     assert result["title"] == "test@example.com"
 
     # Verify that the options were updated
-    assert entry.options == {
-        BINARY_SENSOR: True,
-        SENSOR: False,
-        SWITCH: True,
-        CONF_SCAN_INTERVAL: 300,
-        CONF_HTTP_DEBUG: False,
-        CONF_CURRENCY: "GBP",
-    }
+    assert entry.options == MappingProxyType(
+        {
+            BINARY_SENSOR: True,
+            SENSOR: False,
+            SWITCH: True,
+            UPDATE: True,
+            CONF_SCAN_INTERVAL: 300,
+            CONF_HTTP_DEBUG: False,
+            CONF_CURRENCY: "GBP",
+        }
+    )
+
+
+# Our config flow also has an DHCP flow, so we must test it as well.
+@pytest.mark.asyncio
+async def test_dhcp_flow(hass: HomeAssistant, bypass_get_data) -> None:
+    """Test that DHCP discovery works."""
+    result = await hass.config_entries.flow.async_init(
+       DOMAIN,
+       data=DHCP_SERVICE_INFO,
+       context={"source": config_entries.SOURCE_DHCP},
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_CONFIG
+    )
+
+    assert result2["type"] == "create_entry"
+    assert result2["data"] == MOCK_CONFIG
+
+@pytest.mark.asyncio
+async def test_dhcp_login_error(hass: HomeAssistant, bypass_get_data) -> None:
+    """Test DHCP login error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=DHCP_SERVICE_INFO,
+        context={"source": config_entries.SOURCE_DHCP},
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    with patch(
+        "podpointclient.client.PodPointClient.async_credentials_verified",
+        return_value=False,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            MOCK_CONFIG,
+        )
+        assert result["errors"] == {'base': "auth"}

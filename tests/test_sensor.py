@@ -1,11 +1,12 @@
-"""Test pod_point switch."""
+"""Test pod_point sensors."""
 import asyncio
-
+import pytest
 import aiohttp
 import homeassistant.helpers.aiohttp_client as client
+from homeassistant.components.sensor import SensorDeviceClass
 from .fixtures import POD_COMPLETE_FIXTURE
 from unittest.mock import call, patch
-from typing import List
+from typing import List, Union
 from datetime import datetime
 
 from homeassistant.components import switch
@@ -21,10 +22,17 @@ from custom_components.pod_point.const import (
     SENSOR,
     SWITCH,
     ATTR_STATE,
+    ATTR_STATE_AVAILABLE,
+    ATTR_STATE_UNAVAILABLE,
+    ATTR_STATE_CHARGING,
+    ATTR_STATE_OUT_OF_SERVICE,
+    ATTR_STATE_WAITING,
+    ATTR_STATE_CONNECTED_WAITING,
 )
 from custom_components.pod_point.sensor import (
     PodPointSensor,
     PodPointTotalEnergySensor,
+    PodPointAccountBalanceEntity,
     async_setup_entry,
 )
 
@@ -61,28 +69,30 @@ async def setup_sensors(hass) -> List[PodPointSensor]:
     await async_setup_entry(hass, config_entry, mock)
 
     print(mock.call_args_list)
-    sensors: List[PodPointSensor] = mock.call_args_list[0][0][0]
+    sensors: List[Union(PodPointSensor, PodPointAccountBalanceEntity)] = mock.call_args_list[0][0][0]
 
     return (config_entry, sensors)
 
 
+@pytest.mark.asyncio
 async def test_sensor_creation(hass, bypass_get_data):
     """Test that the expected number of sensors is created"""
 
     (_, sensors) = await setup_sensors(hass)
 
-    assert 6 == len(sensors)
+    assert 7 == len(sensors)
 
 
+@pytest.mark.asyncio
 async def test_status_pod_sensor(hass, bypass_get_data):
     """Tests for pod status sensor."""
     (_, sensors) = await setup_sensors(hass)
 
-    [status, _, _, _, _, _] = sensors
+    [status, _, _, _, _, _, _] = sensors
 
-    assert "pod_point__pod" == status.device_class
+    assert SensorDeviceClass.ENUM == status.device_class
     assert "pod_point_12234_PSL-123456_status" == status.unique_id
-    assert "PSL-123456 Status" == status.name
+    assert "Status" == status.name
     assert "charging" == status.native_value
 
     assert "mdi:ev-plug-type2" == status.icon
@@ -104,13 +114,23 @@ async def test_status_pod_sensor(hass, bypass_get_data):
     assert "mdi:ev-plug-type2" == status.icon
     assert "/api/pod_point/static/xx.png" == status.entity_picture
 
+    assert [
+        ATTR_STATE_AVAILABLE,
+        ATTR_STATE_UNAVAILABLE,
+        ATTR_STATE_CHARGING,
+        ATTR_STATE_OUT_OF_SERVICE,
+        ATTR_STATE_WAITING,
+        ATTR_STATE_CONNECTED_WAITING,
+    ] == status.options
 
+
+@pytest.mark.asyncio
 async def test_total_energy_pod_sensor(hass, bypass_get_data):
     """Tests for pod total eergy sensor."""
     (_, sensors) = await setup_sensors(hass)
 
     total_energy: PodPointTotalEnergySensor
-    [_, _, total_energy, _, _, _] = sensors
+    [_, _, total_energy, _, _, _, _] = sensors
 
     total_energy.async_write_ha_state = Mock()
     total_energy._handle_coordinator_update()
@@ -126,7 +146,7 @@ async def test_total_energy_pod_sensor(hass, bypass_get_data):
 
     assert "pod_point_12234_PSL-123456_status_total_energy" == total_energy.unique_id
 
-    assert "PSL-123456 Total Energy" == total_energy.name
+    assert "Total Energy" == total_energy.name
 
     assert DEVICE_CLASS_ENERGY == total_energy.device_class
     assert STATE_CLASS_TOTAL_INCREASING == total_energy.state_class
@@ -139,19 +159,22 @@ async def test_total_energy_pod_sensor(hass, bypass_get_data):
     assert "mdi:lightning-bolt" == total_energy.icon
     assert True == total_energy.is_on
 
+    assert total_energy.options is None
 
+
+@pytest.mark.asyncio
 async def test_current_energy_pod_sensor(hass, bypass_get_data):
     """Tests for pod current energy sensor."""
     (_, sensors) = await setup_sensors(hass)
 
-    [_, _, _, current_energy, _, _] = sensors
+    [_, _, _, current_energy, _, _, _] = sensors
 
     assert (
         "pod_point_12234_PSL-123456_status_total_energy_current_charge_energy"
         == current_energy.unique_id
     )
 
-    assert "PSL-123456 Current Energy" == current_energy.name
+    assert "Current Energy" == current_energy.name
 
     assert DEVICE_CLASS_ENERGY == current_energy.device_class
     assert STATE_CLASS_TOTAL == current_energy.state_class
@@ -161,18 +184,21 @@ async def test_current_energy_pod_sensor(hass, bypass_get_data):
     current_energy.extra_state_attributes[ATTR_STATE] = "foo"
     assert "mdi:car" == current_energy.icon
 
+    assert current_energy.options is None
 
+
+@pytest.mark.asyncio
 async def test_total_charge_time_pod_sensor(hass, bypass_get_data):
     """Tests for pod total charge time sensor."""
     (_, sensors) = await setup_sensors(hass)
 
-    [_, charge_time, _, _, _, _] = sensors
+    [_, charge_time, _, _, _, _, _] = sensors
 
     assert "pod_point_12234_PSL-123456_charge_time" == charge_time.unique_id
 
-    assert "PSL-123456 Completed Charge Time" == charge_time.name
+    assert "Completed Charge Time" == charge_time.name
 
-    assert "pod_point__pod_charge_time" == charge_time.device_class
+    assert "duration" == charge_time.device_class
     assert 0 == charge_time.native_value
     assert {
         "formatted": "0:00:00",
@@ -222,15 +248,16 @@ async def test_total_charge_time_pod_sensor(hass, bypass_get_data):
     } == charge_time.extra_state_attributes
 
 
+@pytest.mark.asyncio
 async def test_total_cost_pod_sensor(hass, bypass_get_data):
     """Tests for pod total charge time sensor."""
     (_, sensors) = await setup_sensors(hass)
 
-    [_, _, _, _, total_cost, _] = sensors
+    [_, _, _, _, total_cost, _, _] = sensors
 
     assert "pod_point_12234_PSL-123456_total_cost" == total_cost.unique_id
 
-    assert "PSL-123456 Total Cost" == total_cost.name
+    assert "Total Cost" == total_cost.name
 
     assert "monetary" == total_cost.device_class
     assert 0 == total_cost.native_value
@@ -281,17 +308,18 @@ async def test_total_cost_pod_sensor(hass, bypass_get_data):
     assert total_cost.currency == "GBP"
 
 
+@pytest.mark.asyncio
 async def test_last_charge_cost_pod_sensor(hass, bypass_get_data):
     """Tests for pod total charge time sensor."""
     (_, sensors) = await setup_sensors(hass)
 
-    [_, _, _, _, _, last_charge] = sensors
+    [_, _, _, _, _, last_charge, _] = sensors
 
     assert (
         "pod_point_12234_PSL-123456_last_complete_charge_cost" == last_charge.unique_id
     )
 
-    assert "PSL-123456 Last Complete Charge Cost" == last_charge.name
+    assert "Last Completed Charge Cost" == last_charge.name
 
     assert "monetary" == last_charge.device_class
     assert 0 == last_charge.native_value
@@ -321,3 +349,26 @@ async def test_last_charge_cost_pod_sensor(hass, bypass_get_data):
     } == last_charge.extra_state_attributes
 
     assert last_charge.currency == "GBP"
+
+@pytest.mark.asyncio
+async def test_balance_sensor(hass, bypass_get_data):
+    """Tests for pod total charge time sensor."""
+    (_, sensors) = await setup_sensors(hass)
+
+    [_, _, _, _, _, _, balance] = sensors
+
+    assert (
+        "1a756c9b-dfac-4c2a-ba13-9cdcc2399366" == balance.unique_id
+    )
+
+    assert "Pod Point Balance" == balance.name
+
+    assert "monetary" == balance.device_class
+    assert 1.73 == balance.native_value
+    assert balance.extra_state_attributes is None
+    assert "mdi:account-cash" == balance.icon
+
+    balance.user.account.balance = 9945
+    assert 99.45 == balance.native_value
+
+    assert balance.native_unit_of_measurement == "GBP"

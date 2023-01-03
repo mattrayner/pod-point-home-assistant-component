@@ -1,5 +1,6 @@
 """Test pod_point switch."""
 import asyncio
+import pytest
 
 import aiohttp
 import homeassistant.helpers.aiohttp_client as client
@@ -19,6 +20,8 @@ from podpointclient.pod import Pod
 from .const import MOCK_CONFIG
 
 
+@pytest.mark.asyncio
+@pytest.mark.enable_socket
 async def test_switch_services(hass, bypass_get_data):
     """Test switch services."""
     # Create a mock entry so we don't have to go through config flow
