@@ -2,11 +2,13 @@
 import logging
 from typing import Dict, Any
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorEntity,
+    BinarySensorDeviceClass,
+)
 
 from .const import (
     ATTR_STATE,
-    BINARY_SENSOR_DEVICE_CLASS,
     DOMAIN,
 )
 from .entity import PodPointEntity
@@ -53,7 +55,7 @@ class PodPointBinarySensor(PodPointEntity, BinarySensorEntity):
     @property
     def device_class(self):
         """Return the class of this binary_sensor."""
-        return BINARY_SENSOR_DEVICE_CLASS
+        return BinarySensorDeviceClass.PLUG
 
     @property
     def is_on(self):

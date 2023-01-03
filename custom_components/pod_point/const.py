@@ -19,9 +19,6 @@ ICON_EV_STATION = "mdi:ev-station"
 
 SWITCH_ICON = ICON_EV_STATION
 
-# Device classes
-BINARY_SENSOR_DEVICE_CLASS = "plug"
-
 # Platforms
 BINARY_SENSOR = "binary_sensor"
 SENSOR = "sensor"
