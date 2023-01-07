@@ -9,7 +9,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
     CONF_NAME,
-    CONF_PORT,
 )
 import voluptuous as vol
 
@@ -157,10 +156,9 @@ class PodPointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # )
 
         self.discovery_schema = {
-            vol.Required(CONF_MAC, default=device[CONF_HOST]): str,
+            vol.Required(CONF_HOST, default=device[CONF_HOST]): str,
             vol.Required(CONF_EMAIL): str,
             vol.Required(CONF_PASSWORD): str,
-            vol.Required(CONF_PORT, default=device[CONF_PORT]): int,
         }
 
         return await self.async_step_user()
