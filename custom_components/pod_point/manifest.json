@@ -1,11 +1,9 @@
 {
   "domain": "pod_point",
   "name": "Pod Point",
+  "integration_type": "hub",
   "documentation": "https://github.com/mattrayner/pod-point-home-assistant-component",
-  "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/mattrayner/pod-point-home-assistant-component/issues",
-  "version": "0.4.1",
-  "config_flow": true,
   "codeowners": [
     "@mattrayner"
   ],
@@ -13,5 +11,13 @@
     "podpointclient==1.0.0",
     "StrEnum>=0.4,<0.5"
   ],
-  "quality_scale": "gold"
+  "quality_scale": "gold",
+  "iot_class": "cloud_polling",
+  "version": "5.0.0-alpha1",
+  "config_flow": true,
+  "dhcp": [
+    {
+      "hostname": "podpoint-*"
+    }
+  ]
 }

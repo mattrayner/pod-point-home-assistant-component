@@ -3,6 +3,7 @@ pythonenv*
 venv
 .venv
 .coverage
+.coverage.*
 .idea
 htmlcov
 .DS_STORE

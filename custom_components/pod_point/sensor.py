@@ -6,19 +6,23 @@ from datetime import datetime, timedelta, timezone
 from podpointclient.pod import Pod
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_TOTAL,
-    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorDeviceClass,
+    SensorStateClass,
+    UnitOfTime,
+    UnitOfEnergy,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-)
 from homeassistant.core import callback
 
 from .const import (
     ATTR_STATE,
+    ATTR_STATE_AVAILABLE,
+    ATTR_STATE_CHARGING,
+    ATTR_STATE_CONNECTED_WAITING,
+    ATTR_STATE_OUT_OF_SERVICE,
+    ATTR_STATE_UNAVAILABLE,
+    ATTR_STATE_WAITING,
     ATTRIBUTION,
     CONF_CURRENCY,
     DEFAULT_CURRENCY,
@@ -66,17 +70,22 @@ class PodPointSensor(
 ):
     """pod_point Sensor class."""
 
-    @property
-    def device_class(self) -> str:
-        return f"{DOMAIN}__pod"
+    _attr_options = [
+        ATTR_STATE_AVAILABLE,
+        ATTR_STATE_UNAVAILABLE,
+        ATTR_STATE_CHARGING,
+        ATTR_STATE_OUT_OF_SERVICE,
+        ATTR_STATE_WAITING,
+        ATTR_STATE_CONNECTED_WAITING,
+    ]
+    _attr_translation_key = "status"
+    _attr_has_entity_name = True
+    _attr_name = "Status"
+    _attr_device_class = SensorDeviceClass.ENUM
 
     @property
     def unique_id(self):
         return f"{super().unique_id}_status"
-
-    @property
-    def name(self) -> str:
-        return f"{self.pod.ppid} Status"
 
     @property
     def native_value(self):
@@ -111,17 +120,16 @@ class PodPointChargeTimeSensor(
 ):
     """pod_point Sensor class."""
 
-    @property
-    def device_class(self) -> str:
-        return f"{DOMAIN}__pod_charge_time"
+    _attr_has_entity_name = True
+    _attr_name = "Completed Charge Time"
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_native_unit_of_measurement = UnitOfTime.SECONDS
+    _attr_icon = "mdi:timer"
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     @property
     def unique_id(self):
         return f"{super().unique_id}_charge_time"
-
-    @property
-    def name(self) -> str:
-        return f"{self.pod.ppid} Completed Charge Time"
 
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
@@ -137,26 +145,20 @@ class PodPointChargeTimeSensor(
         return self.extra_state_attributes["raw"]
 
     @property
-    def native_unit_of_measurement(self):
-        """Return the unit for this sensor."""
-        return "seconds"
-
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return "mdi:timer"
-
-    @property
     def entity_picture(self) -> str:
         return None
-
-    @property
-    def state_class(self) -> str:
-        return STATE_CLASS_TOTAL_INCREASING
 
 
 class PodPointTotalEnergySensor(PodPointSensor):
     """pod_point total energy Sensor class."""
+
+    _attr_options = None  # Override the options from PodPointSensor (prevents an error as this sensor is an 'energy' type)
+    _attr_translation_key = None
+    _attr_has_entity_name = True
+    _attr_name = "Total Energy"
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     def __init__(self, coordinator, config_entry: ConfigEntry, idx: int):
         super().__init__(coordinator, config_entry=config_entry, idx=idx)
@@ -198,24 +200,8 @@ class PodPointTotalEnergySensor(PodPointSensor):
         return f"{super().unique_id}_total_energy"
 
     @property
-    def name(self) -> str:
-        return f"{self.pod.ppid} Total Energy"
-
-    @property
-    def device_class(self) -> str:
-        return SensorDeviceClass.ENERGY
-
-    @property
-    def state_class(self) -> str:
-        return STATE_CLASS_TOTAL_INCREASING
-
-    @property
     def native_value(self) -> float:
         return self.pod.total_kwh
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        return ENERGY_KILO_WATT_HOUR
 
     @property
     def icon(self):
@@ -239,21 +225,17 @@ class PodPointTotalEnergySensor(PodPointSensor):
 class PodPointCurrentEnergySensor(PodPointTotalEnergySensor):
     """pod_point current charge energy Sensor class."""
 
+    _attr_has_entity_name = True
+    _attr_name = "Current Energy"
+    _attr_state_class = SensorStateClass.TOTAL
+
     @property
     def unique_id(self):
         return f"{super().unique_id}_current_charge_energy"
 
     @property
-    def name(self) -> str:
-        return f"{self.pod.ppid} Current Energy"
-
-    @property
     def native_value(self) -> float:
         return self.pod.current_kwh
-
-    @property
-    def state_class(self) -> str:
-        return STATE_CLASS_TOTAL
 
     @property
     def last_reset(self) -> datetime:
@@ -280,22 +262,20 @@ class PodPointTotalCostSensor(
 ):
     """pod_point total cost sensor class."""
 
-    @property
-    def device_class(self) -> str:
-        return SensorDeviceClass.MONETARY
+    _attr_has_entity_name = True
+    _attr_name = "Total Cost"
+    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_icon = "mdi:cash-multiple"
 
     @property
     def unique_id(self):
         return f"{super().unique_id}_total_cost"
 
     @property
-    def name(self) -> str:
-        return f"{self.pod.ppid} Total Cost"
-
-    @property
     def currency(self) -> str:
         """Which currency type are we returning?"""
 
+        # TODO - Should we use the default currency from HA here? Seems weird to specify a aeperate value here...
         try:
             currency = self.config_entry.options[CONF_CURRENCY]
         except KeyError:
@@ -325,11 +305,6 @@ class PodPointTotalCostSensor(
         return self.extra_state_attributes["currency"]
 
     @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return "mdi:cash-multiple"
-
-    @property
     def entity_picture(self) -> str:
         return None
 
@@ -340,17 +315,14 @@ class PodPointLastCompleteChargeCostSensor(
 ):
     """pod_point cost of last complete charge sensor class."""
 
-    @property
-    def device_class(self) -> str:
-        return SensorDeviceClass.MONETARY
+    _attr_has_entity_name = True
+    _attr_name = "Last Completed Charge Cost"
+    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_icon = "mdi:cash"
 
     @property
     def unique_id(self):
         return f"{super().unique_id}_last_complete_charge_cost"
-
-    @property
-    def name(self) -> str:
-        return f"{self.pod.ppid} Last Complete Charge Cost"
 
     @property
     def currency(self) -> str:
@@ -388,11 +360,6 @@ class PodPointLastCompleteChargeCostSensor(
     def native_unit_of_measurement(self):
         """Return the unit for this sensor."""
         return self.extra_state_attributes["currency"]
-
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return "mdi:cash"
 
     @property
     def entity_picture(self) -> str:

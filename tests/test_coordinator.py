@@ -55,6 +55,7 @@ async def subject_with_data_offline(hass) -> PodPointDataUpdateCoordinator:
 
 
 # Test that refreshes work as expected and populate pods
+@pytest.mark.asyncio
 async def test_coordinator_refresh(hass, bypass_get_data):
     """Test entry setup and unload."""
     coordinator: PodPointDataUpdateCoordinator = await subject(hass)
@@ -74,6 +75,7 @@ async def test_coordinator_refresh(hass, bypass_get_data):
 
 
 # Test refreshes with connection errors fail as expected
+@pytest.mark.asyncio
 async def test_coordinator_refresh_connection_error(hass, error_on_get_data):
     """Test entry setup and unload."""
     # coordinator: PodPointDataUpdateCoordinator = await subject_with_data(hass)
@@ -97,6 +99,7 @@ async def test_coordinator_refresh_connection_error(hass, error_on_get_data):
 
 
 # Test refreshes with auth an session errrors fail as expected
+@pytest.mark.asyncio
 async def test_coordinator_refresh_auth_session_error(hass, error_on_get_data):
     """Test entry setup and unload."""
     # coordinator: PodPointDataUpdateCoordinator = await subject_with_data(hass)
@@ -126,6 +129,7 @@ async def test_coordinator_refresh_auth_session_error(hass, error_on_get_data):
 
 
 # Test refreshes with an exception fail as expected
+@pytest.mark.asyncio
 async def test_coordinator_refresh_unexpected_exception(hass, error_on_get_data):
     """Test entry setup and unload."""
     # coordinator: PodPointDataUpdateCoordinator = await subject_with_data(hass)

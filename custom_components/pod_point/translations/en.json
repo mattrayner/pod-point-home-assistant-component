@@ -34,5 +34,19 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "status": {
+                "state": {
+                    "available": "Available",
+                    "unavailable": "Unavailable",
+                    "charging": "Charging",
+                    "out-of-service": "Out of service",
+                    "waiting-for-schedule": "Waiting for schedule",
+                    "connected-waiting-for-schedule": "Connected but waiting for schedule"
+                }
+            }
+        }
     }
 }
