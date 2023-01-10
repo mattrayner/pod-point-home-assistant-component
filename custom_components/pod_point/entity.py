@@ -113,12 +113,17 @@ class PodPointEntity(CoordinatorEntity):
         if len(self.psl) > 0:
             name = self.psl
 
-        return {
-            "identifiers": {(DOMAIN, self.pod.ppid)},
+        dictionary = {
+            "identifiers": {(DOMAIN, self.serial_number)},
             "name": name,
             "model": self.model,
             "manufacturer": NAME,
         }
+
+        if self.firmware_version:
+            dictionary["sw_version"] = self.firmware_version
+
+        return dictionary
 
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
@@ -211,6 +216,26 @@ class PodPointEntity(CoordinatorEntity):
     def model(self) -> str:
         """Return the model of our podpoint"""
         return self.pod.model.name
+
+    @property
+    def firmware_version(self) -> str:
+        """Return the pod's firmware version"""
+        firmware = None
+
+        if self.pod.firmware and self.pod.firmware.version_info:
+            firmware = self.pod.firmware.version_info.manifest_id
+
+        return firmware
+
+    @property
+    def serial_number(self) -> str:
+        """Return the serial number, or ppid"""
+        sn: str = self.pod.ppid
+
+        if self.pod.firmware:
+            sn = self.pod.firmware.serial_number
+
+        return sn
 
     @property
     def image(self) -> str:

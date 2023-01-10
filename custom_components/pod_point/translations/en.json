@@ -1,4 +1,20 @@
 {
+    "issues": {
+        "firmware_update": {
+            "fix_flow": {
+                "abort": {
+                    "continue_in_app": "Please continue in the PodPoint app."
+                },
+                "step": {
+                    "mobile_app_prompt": {
+                        "description": "A firmware update is available for you device.\n\nExternal updating is not supported by the PodPoint APIs, please check the PodPoint mobile app for next steps."
+                    }
+                }
+            },
+            "title": "Firmware update available for {ppid}",
+            "description": "A firmware update is available for you device.\n\nExternal updating is not supported by the PodPoint APIs, please check the PodPoint mobile app for next steps."
+        }
+    },
     "config": {
         "step": {
             "user": {
@@ -46,6 +62,11 @@
                     "waiting-for-schedule": "Waiting for schedule",
                     "connected-waiting-for-schedule": "Connected but waiting for schedule"
                 }
+            }
+        },
+        "update": {
+            "firmware_update": {
+                "release_notes": "Test test"
             }
         }
     }

@@ -9,11 +9,10 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorDeviceClass,
     SensorStateClass,
-    UnitOfTime,
-    UnitOfEnergy,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
+from homeassistant.const import UnitOfTime, UnitOfEnergy
 
 from .const import (
     ATTR_STATE,

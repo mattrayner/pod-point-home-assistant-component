@@ -24,19 +24,16 @@ from .coordinator import PodPointDataUpdateCoordinator
 
 from .const import (
     APP_IMAGE_URL_BASE,
-    CONF_CURRENCY,
     CONF_PASSWORD,
     CONF_EMAIL,
     CONF_HTTP_DEBUG,
     CONF_SCAN_INTERVAL,
-    DEFAULT_CURRENCY,
     DEFAULT_HTTP_DEBUG,
     DOMAIN,
     PLATFORMS,
     STARTUP_MESSAGE,
     DEFAULT_SCAN_INTERVAL,
 )
-
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
