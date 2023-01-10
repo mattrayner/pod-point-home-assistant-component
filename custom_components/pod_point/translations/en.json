@@ -63,11 +63,6 @@
                     "connected-waiting-for-schedule": "Connected but waiting for schedule"
                 }
             }
-        },
-        "update": {
-            "firmware_update": {
-                "release_notes": "Test test"
-            }
         }
     }
 }

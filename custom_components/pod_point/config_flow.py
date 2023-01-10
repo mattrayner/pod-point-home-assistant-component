@@ -1,15 +1,12 @@
 """Adds config flow for Pod Point."""
-from typing import Any
+import logging
+from typing import Any, Dict
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.components import dhcp
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MAC,
-    CONF_NAME,
-)
+from homeassistant.helpers.device_registry import format_mac
 import voluptuous as vol
 
 from podpointclient.client import PodPointClient
@@ -27,6 +24,8 @@ from .const import (
     DEFAULT_CURRENCY,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 class PodPointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for Pod Point."""
@@ -39,11 +38,13 @@ class PodPointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._errors = {}
 
     # pylint: disable=unused-argument
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(self, user_input: Dict[str, str] = None) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(self, user_input=None):
+    async def async_step_reauth_confirm(
+        self, user_input: Dict[str, str] = None
+    ) -> FlowResult:
         """Dialog that informs the user that reauth is required."""
         if user_input is None:
             return self.async_show_form(
@@ -52,13 +53,9 @@ class PodPointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return await self.async_step_user()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input: Dict[str, str] = None) -> FlowResult:
         """Handle a flow initialized by the user."""
         self._errors = {}
-
-        # Uncomment the next 2 lines if only a single instance of the integration is allowed:
-        # if self._async_current_entries():
-        #     return self.async_abort(reason="single_instance_allowed")
 
         if user_input is None:
             user_input = {}
@@ -90,20 +87,24 @@ class PodPointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry) -> FlowResult:
         return PodPointOptionsFlowHandler(config_entry)
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
-        """Prepare configuration for a DHCP discovered PodPoint device."""
-        return await self._process_discovered_device(
-            {
-                CONF_HOST: discovery_info.ip,
-                CONF_MAC: discovery_info.macaddress,
-                CONF_NAME: discovery_info.hostname,
-            }
-        )
+        formatted_mac = format_mac(discovery_info.macaddress)
+        _LOGGER.info("Found PodPoint device with mac %s", formatted_mac)
 
-    async def _show_config_form(self, user_input):  # pylint: disable=unused-argument
+        await self.async_set_unique_id(formatted_mac)
+        self._abort_if_unique_id_configured()
+
+        if self._async_current_entries():
+            return self.async_abort(reason="already_configured")
+
+        return await self.async_step_user()
+
+    async def _show_config_form(
+        self, user_input: Dict[str, str]
+    ) -> FlowResult:  # pylint: disable=unused-argument
         """Show the configuration form to edit location data."""
         return self.async_show_form(
             step_id="user",
@@ -116,7 +117,7 @@ class PodPointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=self._errors,
         )
 
-    async def _test_credentials(self, username, password):
+    async def _test_credentials(self, username: str, password: str) -> bool:
         """Return true if credentials is valid."""
         try:
             session = async_create_clientsession(self.hass)
@@ -128,41 +129,6 @@ class PodPointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             pass
         return False
 
-    async def _process_discovered_device(self, device: dict[str, Any]) -> FlowResult:
-        """Prepare configuration for a discovered Axis device."""
-        # if device[CONF_MAC][:8] not in AXIS_OUI:
-        #     return self.async_abort(reason="not_axis_device")
-
-        # if is_link_local(ip_address(device[CONF_HOST])):
-        #     return self.async_abort(reason="link_local_address")
-
-        # await self.async_set_unique_id(device[CONF_MAC])
-
-        # self._abort_if_unique_id_configured(
-        #     updates={
-        #         CONF_HOST: device[CONF_HOST],
-        #         CONF_PORT: device[CONF_PORT],
-        #     }
-        # )
-
-        # self.context.update(
-        #     {
-        #         "title_placeholders": {
-        #             CONF_NAME: device[CONF_NAME],
-        #             CONF_HOST: device[CONF_HOST],
-        #         },
-        #         "configuration_url": f"http://{device[CONF_HOST]}:{device[CONF_PORT]}",
-        #     }
-        # )
-
-        self.discovery_schema = {
-            vol.Required(CONF_HOST, default=device[CONF_HOST]): str,
-            vol.Required(CONF_EMAIL): str,
-            vol.Required(CONF_PASSWORD): str,
-        }
-
-        return await self.async_step_user()
-
 
 class PodPointOptionsFlowHandler(config_entries.OptionsFlow):
     """Pod Point config flow options handler."""
@@ -172,11 +138,13 @@ class PodPointOptionsFlowHandler(config_entries.OptionsFlow):
         self.config_entry = config_entry
         self.options = dict(config_entry.options)
 
-    async def async_step_init(self, user_input=None):  # pylint: disable=unused-argument
+    async def async_step_init(
+        self, _=None
+    ) -> FlowResult:  # pylint: disable=unused-argument
         """Manage the options."""
         return await self.async_step_user()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle a flow initialized by the user."""
         if user_input is not None:
             self.options.update(user_input)

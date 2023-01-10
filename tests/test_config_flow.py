@@ -162,3 +162,9 @@ async def test_options_flow(hass):
         CONF_HTTP_DEBUG: False,
         CONF_CURRENCY: "GBP",
     }
+
+
+# Our config flow also has an DHCP flow, so we must test it as well.
+@pytest.mark.asyncio
+async def test_dhcp_flow(hass):
+    assert False is True
