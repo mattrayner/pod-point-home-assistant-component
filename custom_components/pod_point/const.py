@@ -35,7 +35,7 @@ CONF_SCAN_INTERVAL = "scan_interval"
 DEFAULT_SCAN_INTERVAL = 300
 CONF_HTTP_DEBUG = "http_debug"
 DEFAULT_HTTP_DEBUG = False
-CONF_CURRENCY = "currancy"
+CONF_CURRENCY = "currency"
 DEFAULT_CURRENCY = "GBP"
 
 # Defaults

@@ -180,7 +180,7 @@ class PodPointOptionsFlowHandler(config_entries.OptionsFlow):
         }
 
         options_schema = vol.Schema(
-            {**currency_schema, **poll_schema, **platforms_schema, **debug_schema}
+            {**currency_schema, **platforms_schema, **debug_schema, **poll_schema}
         )
 
         return self.async_show_form(step_id="user", data_schema=options_schema)

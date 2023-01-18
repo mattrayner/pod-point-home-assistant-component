@@ -36,7 +36,9 @@
                     "sensor": "Pod status, energy and cost sensors enabled.",
                     "switch": "Charging switch enabled.",
                     "scan_interval": "Poll interval (seconds)",
-                    "http_debug": "Enable verbose HTTP logging."
+                    "http_debug": "Enable verbose HTTP logging.",
+                    "update": "Enable firmware sensor",
+                    "currency": "Currency used for cost sensors"
                 }
             }
         }
