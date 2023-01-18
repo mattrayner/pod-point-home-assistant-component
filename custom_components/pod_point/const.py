@@ -23,7 +23,8 @@ SWITCH_ICON = ICON_EV_STATION
 BINARY_SENSOR = "binary_sensor"
 SENSOR = "sensor"
 SWITCH = "switch"
-PLATFORMS = [BINARY_SENSOR, SENSOR, SWITCH]
+UPDATE = "update"
+PLATFORMS = [BINARY_SENSOR, SENSOR, SWITCH, UPDATE]
 ENERGY = "energy"
 
 # Configuration and options

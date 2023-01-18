@@ -22,6 +22,9 @@ Platform | Description
 `sensor` (Current Charge Energy) | Show the KWh for the current charge session (or 0).
 `sensor` (*Total Cost) | Show the total cost of all ***completed* charges.
 `sensor` (Last ***Completed* Charge Cost) | Show the total cost of the last ***completed* charge.
+`sensor` (Completed charge time) | Show a combined 'charge time' value from all charges for a given pod.
+`sensor` (Firmware Update) | Shows the current firmware version for your device and alerts if an update is available
+`sensor` (Balance) | Shows the balance on your PodPoint account.
 `switch` | Enable/disable  charging.
 
 > ***Total cost is based on the energy provider and kWh cost set in Pod Point.**
@@ -41,9 +44,13 @@ Platform | Description
 
 ## Configuration is done in the UI
 
-> **NOTE:** Due to support for energy sensors and multiple Pod Point accounts, upgrading from <0.3 is not supported. You should remove your pod point configuration and re-configure it after upgrading.
+> **NOTE:** Due to a breaking change in version 1.0.0, upgrading from previous versions (<= 0.4.4) will cause devices to be duplicated. This can be fixed by removing the configuration and then re-adding.
 
-Once you have installed either manually or via HACS, restart your home assistant instance and then setup the component by choosing 'Add integration' and search for 'Pod Point.
+Once you have installed either manually or via HACS, restart your home assistant instance and then setup the component by either choosing 'Add integration' and search for 'Pod Point', or through using an auto-discovered Pod on the integrations screen.
+
+### Auto-discovered Pods
+
+Pods are auto-discovered based on their DHCP host and client MAC address. Any device who's host starts with 'podpoint-*' whilst having a MAC address assigned to Espressif will trigger the auto-discovery feature.
 
 ## Statuses
 
@@ -73,9 +80,13 @@ In order to provide the `Total Cost` and `Last Completed Charge Cost` sensors, w
 * Energy use for each charge is rounded by Pod Point (see [Energy sensors](#energy-sensors) above) and energy costs are calculated on this rounded value.
 * You must set an accurate kWh cost within the Pod Point app (and keep this up to date if your provider/cost per kWh changes
 
-> Give the above rounding, in my opinion the cost values should be used as a guide rather than taken as gospel
+> Given the above rounding, in my opinion the cost values should be used as a guide rather than taken as gospel
 
 >**Charges are considered complete by Pod Point when you disconnect the vehicle, not when power delivery stops.
+
+## Firmware update notifications
+
+If an update is detected for your device, a new repair entry will be created within Home Assistant, prompting you to update using the mobile app. Unforrunately, at this time it is not possible to trigger the firmware update from outside of the Pod Point app but to restrictions with the Pod Point APIs.
 
 ## Lovelace examples
 

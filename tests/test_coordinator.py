@@ -16,11 +16,12 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from podpointclient.client import PodPointClient
 from podpointclient.pod import Pod
+from podpointclient.user import User
 from podpointclient.errors import AuthError, ApiConnectionError, SessionError
-from podpointclient.factories import PodFactory
+from podpointclient.factories import FirmwareFactory, UserFactory, PodFactory
 
 from .const import MOCK_CONFIG
-from .fixtures import POD_COMPLETE_FIXTURE
+from .fixtures import POD_COMPLETE_FIXTURE, FIRMWARE_COMPLETE_FIXTURE, USER_COMPLETE_FIXTURE
 
 
 async def subject(hass) -> PodPointDataUpdateCoordinator:
@@ -38,10 +39,15 @@ async def subject_with_data(hass) -> PodPointDataUpdateCoordinator:
     """Return a setup coodrinator with pods"""
     pod_factory = PodFactory()
     pods = pod_factory.build_pods({"pods": [POD_COMPLETE_FIXTURE]})
+    firmware_factory = FirmwareFactory()
+    pods[0].firmware = firmware_factory.build_firmwares(FIRMWARE_COMPLETE_FIXTURE)[0]
+    user_factory = UserFactory()
+    user = user_factory.build_user(USER_COMPLETE_FIXTURE)
 
     coordinator: PodPointDataUpdateCoordinator = await subject(hass)
     coordinator.pods = pods
     coordinator.data = pods
+    coordinator.user = user
     coordinator.online = True
     return coordinator
 
@@ -55,6 +61,7 @@ async def subject_with_data_offline(hass) -> PodPointDataUpdateCoordinator:
 
 
 # Test that refreshes work as expected and populate pods
+@pytest.mark.asyncio
 async def test_coordinator_refresh(hass, bypass_get_data):
     """Test entry setup and unload."""
     coordinator: PodPointDataUpdateCoordinator = await subject(hass)
@@ -71,9 +78,11 @@ async def test_coordinator_refresh(hass, bypass_get_data):
     assert isinstance(pod, Pod)
     assert len(pod.charges) == 9
     assert pod.last_charge_cost == 116
+    assert isinstance(coordinator.user, User) is True
 
 
 # Test refreshes with connection errors fail as expected
+@pytest.mark.asyncio
 async def test_coordinator_refresh_connection_error(hass, error_on_get_data):
     """Test entry setup and unload."""
     # coordinator: PodPointDataUpdateCoordinator = await subject_with_data(hass)
@@ -97,6 +106,7 @@ async def test_coordinator_refresh_connection_error(hass, error_on_get_data):
 
 
 # Test refreshes with auth an session errrors fail as expected
+@pytest.mark.asyncio
 async def test_coordinator_refresh_auth_session_error(hass, error_on_get_data):
     """Test entry setup and unload."""
     # coordinator: PodPointDataUpdateCoordinator = await subject_with_data(hass)
@@ -126,6 +136,7 @@ async def test_coordinator_refresh_auth_session_error(hass, error_on_get_data):
 
 
 # Test refreshes with an exception fail as expected
+@pytest.mark.asyncio
 async def test_coordinator_refresh_unexpected_exception(hass, error_on_get_data):
     """Test entry setup and unload."""
     # coordinator: PodPointDataUpdateCoordinator = await subject_with_data(hass)
@@ -142,3 +153,5 @@ async def test_coordinator_refresh_unexpected_exception(hass, error_on_get_data)
 
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
+
+# TODO: Add a test for repair flow creation and cleanup

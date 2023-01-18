@@ -36,6 +36,10 @@ async def async_setup_entry(hass, entry, async_add_devices):
 class PodPointBinarySensor(PodPointEntity, BinarySensorEntity):
     """pod_point binary_sensor class."""
 
+    _attr_has_entity_name = True
+    _attr_name = "Cable Status"
+    _attr_device_class = BinarySensorDeviceClass.PLUG
+
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         state = super().extra_state_attributes.get(ATTR_STATE, "")
@@ -47,15 +51,6 @@ class PodPointBinarySensor(PodPointEntity, BinarySensorEntity):
     @property
     def unique_id(self):
         return f"{super().unique_id}_cable_status"
-
-    @property
-    def name(self) -> str:
-        return f"{self.pod.ppid} Cable Status"
-
-    @property
-    def device_class(self):
-        """Return the class of this binary_sensor."""
-        return BinarySensorDeviceClass.PLUG
 
     @property
     def is_on(self):

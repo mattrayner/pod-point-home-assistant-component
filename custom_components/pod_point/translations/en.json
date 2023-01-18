@@ -1,4 +1,10 @@
 {
+    "issues": {
+        "firmware_update": {
+            "title": "Firmware update available for {ppid}",
+            "description": "A firmware update is available for you device.\n\nExternal updating is not supported by the PodPoint APIs, please check the PodPoint mobile app for next steps."
+        }
+    },
     "config": {
         "step": {
             "user": {
@@ -31,6 +37,20 @@
                     "switch": "Charging switch enabled.",
                     "scan_interval": "Poll interval (seconds)",
                     "http_debug": "Enable verbose HTTP logging."
+                }
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "status": {
+                "state": {
+                    "available": "Available",
+                    "unavailable": "Unavailable",
+                    "charging": "Charging",
+                    "out-of-service": "Out of service",
+                    "waiting-for-schedule": "Waiting for schedule",
+                    "connected-waiting-for-schedule": "Connected but waiting for schedule"
                 }
             }
         }

@@ -7,9 +7,11 @@ from typing import List, Dict, Set
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers import issue_registry as ir
 
 from podpointclient.client import PodPointClient
-from podpointclient.pod import Pod
+from podpointclient.pod import Pod, Firmware
+from podpointclient.user import User
 from podpointclient.charge import Charge
 from podpointclient.errors import AuthError, SessionError, ApiConnectionError
 
@@ -20,6 +22,8 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the API."""
+
+    _firmware_refresh_interval = 5  # How many refreshes between a firmware update call
 
     def __init__(
         self, hass: HomeAssistant, client: PodPointClient, scan_interval: int
@@ -37,6 +41,8 @@ class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
         )
         self.pod_dict = None
         self.online = None
+        self.firmware_refresh = 1  # Initial refresh will be a firmware refresh too, ensuring we pull firmware for all pods at startup
+        self.user: User = None
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=scan_interval)
 
@@ -46,6 +52,8 @@ class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.debug("Updating pods and charges")
             new_pods: List[Pod] = []
             self.pod_dict: Dict[int, Pod] = None
+
+            self.user = await self.api.async_get_user()
 
             # Should we get a limited set of data (subsiquent refreshes)
             if len(self.pods) > 0:
@@ -83,6 +91,33 @@ class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
                 new_pods = await self.api.async_get_all_pods()
 
             new_pods_by_id = self.__group_pods_by_unit_id(pods=new_pods)
+
+            # Fetch firmware data for pods, if it is needed
+            self.firmware_refresh -= 1
+            if self.firmware_refresh <= 0:
+                _LOGGER.debug("=== FIRMWARE STATUS UPDATE ===")
+
+                for pod in new_pods:
+                    pod_firmwares: List[Firmware] = await self.api.async_get_firmware(
+                        pod=pod
+                    )
+
+                    if len(pod_firmwares) <= 0:
+                        _LOGGER.warning(
+                            "Unable to retrive firmware information for Pod %s",
+                            pod.ppid,
+                        )
+                    else:
+                        for firmware in pod_firmwares:
+                            self.__process_repair_notification(
+                                hass=self.hass, firmware=firmware, pod=pod
+                            )
+
+                            # Populate the firmware of the pod
+                            pod.firmware = firmware
+                            new_pods_by_id[pod.unit_id] = pod
+
+                self.firmware_refresh = self._firmware_refresh_interval
 
             # Determine if we should fetch for all charges, or just the most recent for a user.
             should_fetch_all_charges = self.__should_fetch_all_charges(
@@ -274,6 +309,7 @@ expecting more charges. Page {page}, looking for : {last_charge_ids}"
             new_pod.price = previous_pod.price
             new_pod.model = previous_pod.model
             new_pod.unit_connectors = previous_pod.unit_connectors
+            new_pod.firmware = previous_pod.firmware
 
             new_pods.append(new_pod)
 
@@ -285,3 +321,21 @@ expecting more charges. Page {page}, looking for : {last_charge_ids}"
 
         # Is there a difference in the pod IDs?
         return len(difference) == 0
+
+    def __process_repair_notification(
+        self, hass: HomeAssistant, firmware: Firmware, pod: Pod
+    ):
+        if firmware.update_available:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "firmware_update",
+                is_fixable=False,
+                is_persistent=False,
+                learn_more_url="https://pod-point.com/electric-car-news",
+                severity="other",
+                translation_key="firmware_update",
+                translation_placeholders={"ppid": pod.ppid},
+            )
+        else:
+            ir.async_delete_issue(hass, DOMAIN, "firmware_update")

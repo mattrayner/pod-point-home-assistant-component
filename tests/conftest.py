@@ -16,9 +16,9 @@
 # pytest includes fixtures OOB which you can use as defined on this page)
 from unittest.mock import patch
 
-from .fixtures import CHARGES_COMPLETE_FIXTURE, POD_COMPLETE_FIXTURE
+from .fixtures import CHARGES_COMPLETE_FIXTURE, POD_COMPLETE_FIXTURE, FIRMWARE_COMPLETE_FIXTURE, USER_COMPLETE_FIXTURE
 
-from podpointclient.factories import PodFactory, ChargeFactory
+from podpointclient.factories import PodFactory, ChargeFactory, FirmwareFactory, UserFactory
 from podpointclient.errors import AuthError
 
 import pytest
@@ -56,6 +56,10 @@ def bypass_get_data_fixture():
     pod = pods[0]
     charge_factory = ChargeFactory()
     charges = charge_factory.build_charges(CHARGES_COMPLETE_FIXTURE)
+    firmware_factory = FirmwareFactory()
+    firmware = firmware_factory.build_firmwares(FIRMWARE_COMPLETE_FIXTURE)
+    user_factory = UserFactory()
+    user = user_factory.build_user(USER_COMPLETE_FIXTURE)
 
     with patch(
         "podpointclient.client.PodPointClient.async_get_all_pods", return_value=pods
@@ -69,6 +73,12 @@ def bypass_get_data_fixture():
     ), patch(
         "podpointclient.client.PodPointClient.async_credentials_verified",
         return_value=True,
+    ), patch(
+        "podpointclient.client.PodPointClient.async_get_firmware",
+        return_value=firmware,
+    ), patch(
+        "podpointclient.client.PodPointClient.async_get_user",
+        return_value=user,
     ):
         yield
 
@@ -78,8 +88,14 @@ def bypass_get_data_fixture():
 @pytest.fixture(name="error_on_get_data")
 def error_get_data_fixture():
     """Simulate error when retrieving data from API."""
+    user_factory = UserFactory()
+    user = user_factory.build_user(USER_COMPLETE_FIXTURE)
+
     with patch(
         "podpointclient.client.PodPointClient.async_get_pods",
         side_effect=AuthError,
+    ), patch(
+        "podpointclient.client.PodPointClient.async_get_user",
+        return_value=user,
     ):
         yield

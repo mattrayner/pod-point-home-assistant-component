@@ -1,5 +1,6 @@
 """Test pod_point switch."""
 import asyncio
+import pytest
 from email.utils import encode_rfc2231
 
 import aiohttp
@@ -62,6 +63,7 @@ async def setup_entity(hass) -> Pod:
     return PodPointEntity(coordinator, config_entry, 0)
 
 
+@pytest.mark.asyncio
 async def test_pod_point_entity(hass, bypass_get_data):
     """Test attributes of a PodPointEntity"""
     entity: PodPointEntity = await setup_entity(hass)
@@ -78,10 +80,11 @@ async def test_pod_point_entity(hass, bypass_get_data):
     entity.coordinator.online = True
 
     assert {
-        "identifiers": {("pod_point", "PSL-123456")},
+        "identifiers": {("pod_point", "123456789")},
         "manufacturer": "Pod Point",
         "model": "S7-UC-03-ACA",
         "name": "PSL-123456",
+        "sw_version": "A30P-3.1.22-00001",
     } == entity.device_info
 
     assert {
@@ -207,6 +210,7 @@ async def test_pod_point_entity(hass, bypass_get_data):
         ],
         "unit_id": 123456,
         "total_cost": 0,
+        'firmware': {'serial_number': '123456789', 'update_status': {'is_update_available': False}, 'version_info': {'manifest_id': 'A30P-3.1.22-00001'}},
     } == entity.extra_state_attributes
 
     assert True is entity.charging_allowed
@@ -310,6 +314,7 @@ async def test_pod_point_entity(hass, bypass_get_data):
     assert None == entity.image
 
 
+@pytest.mark.asyncio
 async def test_compare_state(hass, bypass_get_data):
     """Test compare_state of a PodPointEntity object"""
     entity: PodPointEntity = await setup_entity(hass)
