@@ -1,5 +1,5 @@
 {
-  "version": "5.0.0-alpha3",
+  "version": "1.0.2",
   "domain": "pod_point",
   "name": "Pod Point",
   "integration_type": "hub",
