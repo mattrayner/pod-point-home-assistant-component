@@ -155,7 +155,8 @@ class PodPointChargeTimeSensor(
 class PodPointTotalEnergySensor(PodPointSensor):
     """pod_point total energy Sensor class."""
 
-    _attr_options = None  # Override the options from PodPointSensor (prevents an error as this sensor is an 'energy' type)
+    # Override options from PodPointSensor (prevents an error as this sensor is an 'energy' type)
+    _attr_options = None
     _attr_translation_key = None
     _attr_has_entity_name = True
     _attr_name = "Total Energy"
@@ -278,7 +279,7 @@ class PodPointTotalCostSensor(
     def currency(self) -> str:
         """Which currency type are we returning?"""
 
-        # TODO - Should we use the default currency from HA here? Seems weird to specify a aeperate value here...
+        # TODO - Should we use currency from the user's account
         try:
             currency = self.config_entry.options[CONF_CURRENCY]
         except KeyError:

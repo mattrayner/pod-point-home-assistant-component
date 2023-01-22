@@ -1,6 +1,6 @@
 """Adds config flow for Pod Point."""
 import logging
-from typing import Any, Dict
+from typing import Dict
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession

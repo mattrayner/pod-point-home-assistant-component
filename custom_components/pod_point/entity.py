@@ -4,7 +4,6 @@ from typing import Any, Dict, List
 from datetime import datetime, timedelta
 
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.helpers.entity import Entity
 from homeassistant.core import callback
 from homeassistant.config_entries import ConfigEntry
 
@@ -231,12 +230,12 @@ class PodPointEntity(CoordinatorEntity):
     @property
     def serial_number(self) -> str:
         """Return the serial number, or ppid"""
-        sn: str = self.pod.ppid
+        serial_number: str = self.pod.ppid
 
         if self.pod.firmware:
-            sn = self.pod.firmware.serial_number
+            serial_number = self.pod.firmware.serial_number
 
-        return sn
+        return serial_number
 
     @property
     def image(self) -> str:
@@ -313,7 +312,7 @@ class PodPointEntity(CoordinatorEntity):
             if seconds > period_seconds:
                 period_value, seconds = divmod(seconds, period_seconds)
                 has_s = "s" if period_value > 1 else ""
-                strings.append("%s %s%s" % (period_value, period_name, has_s))
+                strings.append(f'{period_value} {period_name}{has_s}')
 
         output = "0s"
         if len(strings) > 0:

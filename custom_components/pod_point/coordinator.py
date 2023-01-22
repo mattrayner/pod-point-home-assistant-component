@@ -44,7 +44,7 @@ class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
         )
         self.pod_dict = None
         self.online = None
-        self.firmware_refresh = 1  # Initial refresh will be a firmware refresh too, ensuring we pull firmware for all pods at startup
+        self.refreshes_until_firmware_refresh = 1
         self.user: User = None
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=scan_interval)
@@ -74,18 +74,14 @@ class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
             new_pods_by_id = self.__group_pods_by_unit_id(pods=new_pods)
 
             # Fetch firmware data for pods, if it is needed
-            self.firmware_refresh -= 1
-            if self.firmware_refresh <= 0:
+            self.refreshes_until_firmware_refresh -= 1
+            we_should_refresh_firmware = (self.refreshes_until_firmware_refresh <= 0)
+            if we_should_refresh_firmware:
                 new_pods_by_id = await self.__async_refresh_firmware(new_pods, new_pods_by_id)
-
-            # Determine if we should fetch for all charges, or just the most recent for a user.
-            should_fetch_all_charges = self.__should_fetch_all_charges(
-                new_pods=new_pods
-            )
 
             # Fetch a list of new charges
             new_charges: List[Charge] = await self.__fetch_home_charges(
-                all_charges=should_fetch_all_charges
+                should_fetch_all_charges=self.__should_fetch_all_charges(new_pods=new_pods)
             )
 
             # We will filter out any of the new charges from the existing list. This will
@@ -98,9 +94,8 @@ class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
             ]
 
             _LOGGER.debug(
-                "=== CHARGE UPDATE ===\nShould get all charges: %s\nPrevious Charges: %s\n\
+                "=== CHARGE UPDATE ===\nPrevious Charges: %s\n\
 Updated Charges: %s\nCombined Charges: %s",
-                should_fetch_all_charges,
                 len(self.home_charges),
                 len(new_charges),
                 len(combined_home_charges),
@@ -191,12 +186,12 @@ If this issue persists, please contact the developer."
         self.pod_dict = pod_dict
         return self.pod_dict
 
-    async def __fetch_home_charges(self, all_charges: bool = True) -> List[Charge]:
+    async def __fetch_home_charges(self, should_fetch_all_charges: bool = True) -> List[Charge]:
         """Fetch either all charges for a user, or progressively paginate until you have the latest
         set of charges. Filtered to only include 'home' charges"""
         charges: List[Charge] = []
 
-        if all_charges:
+        if should_fetch_all_charges:
             charges = await self.api.async_get_all_charges(
                 perpage=self.charges_perpage_all
             )
@@ -312,8 +307,8 @@ expecting more charges. Page {page}, looking for : {last_charge_ids}"
 
     async def __async_group_pods(
         self,
-        new_pods,
-        new_pods_by_id
+        new_pods: List[Pod],
+        new_pods_by_id: Dict[str, List[Pod]]
     ) -> Tuple[List[Pod], Dict[str, Pod]]:
         # Attempt to update our new pods with additional data from the existing pods.
         # This allows us to query less data each refresh, kinder on the Pod Point APIs.
@@ -359,6 +354,6 @@ expecting more charges. Page {page}, looking for : {last_charge_ids}"
                     pod.firmware = firmware
                     new_pods_by_id[pod.unit_id] = pod
 
-        self.firmware_refresh = self._firmware_refresh_interval
+        self.refreshes_until_firmware_refresh = self._firmware_refresh_interval
 
         return new_pods_by_id
