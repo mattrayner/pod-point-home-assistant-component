@@ -2,7 +2,7 @@
 Data coordinator for pod point client
 """
 import logging
-from typing import List, Dict, Set
+from typing import List, Dict, Set, Tuple
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -26,7 +26,10 @@ class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
     _firmware_refresh_interval = 5  # How many refreshes between a firmware update call
 
     def __init__(
-        self, hass: HomeAssistant, client: PodPointClient, scan_interval: int
+        self,
+        hass: HomeAssistant,
+        client: PodPointClient,
+        scan_interval: int
     ) -> None:
         """Initialize."""
         self.api: PodPointClient = client
@@ -54,16 +57,7 @@ class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
             self.pod_dict: Dict[int, Pod] = None
 
             self.user = await self.api.async_get_user()
-
-            # Should we get a limited set of data (subsiquent refreshes)
-            if len(self.pods) > 0:
-                _LOGGER.debug("Existing pods found, performing a limited data pull")
-                new_pods = await self.api.async_get_all_pods(
-                    includes=LIMITED_POD_INCLUDES
-                )
-            else:
-                _LOGGER.debug("No existing pods found, performing a full data pull")
-                new_pods = await self.api.async_get_all_pods()
+            new_pods = await self.__async_update_pods()
 
             _LOGGER.debug(
                 "=== POD UPDATE ===\nFound Pods: %s\nPrevious Pods: %s",
@@ -75,49 +69,14 @@ class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
             # they were performed on
             new_pods_by_id = self.__group_pods_by_unit_id(pods=new_pods)
 
-            # Attempt to update our new pods with additional data from the existing pods.
-            # This allows us to query less data each refresh, kinder on the Pod Point APIs.
-            if self.__pods_match(new_pods=new_pods):
-                # Created an updated list of pods combining old and new data
-                _LOGGER.debug("Combining new and old pods")
-                new_pods = self.__combine_pods(new_pods_by_id=new_pods_by_id)
-                new_pods_by_id = self.__group_pods_by_unit_id(pods=new_pods)
-            elif (
-                len(self.pods) > 0
-            ):  # Ensure that we are not re-querying if this is he first run
-                _LOGGER.debug(
-                    "New pods from Pod Point do not match those saved. Performing a full data pull."
-                )
-                new_pods = await self.api.async_get_all_pods()
+            (new_pods, new_pods_by_id) = await self.__async_group_pods(new_pods, new_pods_by_id)
 
             new_pods_by_id = self.__group_pods_by_unit_id(pods=new_pods)
 
             # Fetch firmware data for pods, if it is needed
             self.firmware_refresh -= 1
             if self.firmware_refresh <= 0:
-                _LOGGER.debug("=== FIRMWARE STATUS UPDATE ===")
-
-                for pod in new_pods:
-                    pod_firmwares: List[Firmware] = await self.api.async_get_firmware(
-                        pod=pod
-                    )
-
-                    if len(pod_firmwares) <= 0:
-                        _LOGGER.warning(
-                            "Unable to retrive firmware information for Pod %s",
-                            pod.ppid,
-                        )
-                    else:
-                        for firmware in pod_firmwares:
-                            self.__process_repair_notification(
-                                hass=self.hass, firmware=firmware, pod=pod
-                            )
-
-                            # Populate the firmware of the pod
-                            pod.firmware = firmware
-                            new_pods_by_id[pod.unit_id] = pod
-
-                self.firmware_refresh = self._firmware_refresh_interval
+                new_pods_by_id = await self.__async_refresh_firmware(new_pods, new_pods_by_id)
 
             # Determine if we should fetch for all charges, or just the most recent for a user.
             should_fetch_all_charges = self.__should_fetch_all_charges(
@@ -339,3 +298,67 @@ expecting more charges. Page {page}, looking for : {last_charge_ids}"
             )
         else:
             ir.async_delete_issue(hass, DOMAIN, "firmware_update")
+
+    async def __async_update_pods(self) -> List[Pod]:
+        # Should we get a limited set of data (subsiquent refreshes)
+        if len(self.pods) > 0:
+            _LOGGER.debug("Existing pods found, performing a limited data pull")
+            return await self.api.async_get_all_pods(
+                includes=LIMITED_POD_INCLUDES
+            )
+        else:
+            _LOGGER.debug("No existing pods found, performing a full data pull")
+            return await self.api.async_get_all_pods()
+
+    async def __async_group_pods(
+        self,
+        new_pods,
+        new_pods_by_id
+    ) -> Tuple[List[Pod], Dict[str, Pod]]:
+        # Attempt to update our new pods with additional data from the existing pods.
+        # This allows us to query less data each refresh, kinder on the Pod Point APIs.
+        if self.__pods_match(new_pods=new_pods):
+            # Created an updated list of pods combining old and new data
+            _LOGGER.debug("Combining new and old pods")
+            new_pods = self.__combine_pods(new_pods_by_id=new_pods_by_id)
+            new_pods_by_id = self.__group_pods_by_unit_id(pods=new_pods)
+        elif (
+            len(self.pods) > 0
+        ):  # Ensure that we are not re-querying if this is he first run
+            _LOGGER.debug(
+                "New pods from Pod Point do not match those saved. Performing a full data pull."
+            )
+            new_pods = await self.api.async_get_all_pods()
+
+        return (new_pods, new_pods_by_id)
+
+    async def __async_refresh_firmware(
+        self,
+        new_pods: List[Pod],
+        new_pods_by_id: Dict[str, List[Pod]]
+    ) -> Dict[str, List[Pod]]:
+        _LOGGER.debug("=== FIRMWARE STATUS UPDATE ===")
+
+        for pod in new_pods:
+            pod_firmwares: List[Firmware] = await self.api.async_get_firmware(
+                pod=pod
+            )
+
+            if len(pod_firmwares) <= 0:
+                _LOGGER.warning(
+                    "Unable to retrive firmware information for Pod %s",
+                    pod.ppid,
+                )
+            else:
+                for firmware in pod_firmwares:
+                    self.__process_repair_notification(
+                        hass=self.hass, firmware=firmware, pod=pod
+                    )
+
+                    # Populate the firmware of the pod
+                    pod.firmware = firmware
+                    new_pods_by_id[pod.unit_id] = pod
+
+        self.firmware_refresh = self._firmware_refresh_interval
+
+        return new_pods_by_id

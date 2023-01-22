@@ -153,7 +153,7 @@ entities:
     name: Current Energy
   - entity: sensor.psl_xxxxxx_total_energy
     name: Total Energy
-  - entity: sensor.psl_xxxxxx_last_complete_charge_cost
+  - entity: sensor.psl_xxxxxx_last_completed_charge_cost
     name: Last Completed Charge Cost
   - entity: sensor.psl_xxxxxx_total_cost
     name: Total Cost (completed charges)
