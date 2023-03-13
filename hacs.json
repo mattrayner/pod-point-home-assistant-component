@@ -1,6 +1,6 @@
 {
     "name": "Pod Point",
+    "country": "GB",
     "hacs": "1.6.0",
-    "homeassistant": "2023.1.0",
-    "country": "GB"
+    "homeassistant": "2023.1.0"
 }
