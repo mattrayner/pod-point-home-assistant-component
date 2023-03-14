@@ -1,33 +1,30 @@
 """PodPointEntity class"""
+from .const import (
+    APP_IMAGE_URL_BASE,
+    ATTR_STATE,
+    ATTR_STATE_AVAILABLE,
+    ATTR_STATE_CHARGING,
+    ATTR_STATE_CONNECTED_WAITING,
+    ATTR_STATE_RANKING,
+    ATTR_STATE_WAITING,
+    ATTRIBUTION,
+    CHARGING_FLAG,
+    DOMAIN,
+    NAME,
+)
+from datetime import datetime, timedelta
 import logging
 from typing import Any, Dict, List
-from datetime import datetime, timedelta
 
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.helpers.entity import Entity
-from homeassistant.core import callback
 from homeassistant.config_entries import ConfigEntry
-
+from homeassistant.core import callback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from podpointclient.pod import Pod
 from podpointclient.schedule import Schedule
 
 from .coordinator import PodPointDataUpdateCoordinator
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
-
-from .const import (
-    ATTR_STATE_AVAILABLE,
-    ATTR_STATE_CHARGING,
-    DOMAIN,
-    NAME,
-    ATTRIBUTION,
-    ATTR_STATE_RANKING,
-    ATTR_STATE,
-    ATTR_STATE_WAITING,
-    ATTR_STATE_CONNECTED_WAITING,
-    APP_IMAGE_URL_BASE,
-    CHARGING_FLAG,
-)
 
 
 class PodPointEntity(CoordinatorEntity):
@@ -231,12 +228,12 @@ class PodPointEntity(CoordinatorEntity):
     @property
     def serial_number(self) -> str:
         """Return the serial number, or ppid"""
-        sn: str = self.pod.ppid
+        serial_number: str = self.pod.ppid
 
         if self.pod.firmware:
-            sn = self.pod.firmware.serial_number
+            serial_number = self.pod.firmware.serial_number
 
-        return sn
+        return serial_number
 
     @property
     def image(self) -> str:

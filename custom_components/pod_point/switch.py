@@ -5,8 +5,8 @@ from homeassistant.components.switch import SwitchEntity
 from podpointclient.client import PodPointClient
 
 from .const import DOMAIN, SWITCH_ICON
-from .entity import PodPointEntity
 from .coordinator import PodPointDataUpdateCoordinator
+from .entity import PodPointEntity
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 

@@ -1,20 +1,19 @@
 """Sensor platform for pod_point."""
-import logging
-from typing import Dict, Any
 from datetime import datetime, timedelta, timezone
+import logging
+from typing import Any, Dict
 
-from podpointclient.pod import Pod
-from podpointclient.user import User
-
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.components.sensor import (
-    SensorEntity,
     SensorDeviceClass,
+    SensorEntity,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfEnergy, UnitOfTime
 from homeassistant.core import callback
-from homeassistant.const import UnitOfTime, UnitOfEnergy
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from podpointclient.pod import Pod
+from podpointclient.user import User
 
 from .const import (
     ATTR_STATE,
@@ -32,8 +31,8 @@ from .const import (
     ICON_1C,
     ICON_2C,
 )
-from .entity import PodPointEntity
 from .coordinator import PodPointDataUpdateCoordinator
+from .entity import PodPointEntity
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 

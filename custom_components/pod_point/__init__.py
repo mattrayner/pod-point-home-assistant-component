@@ -8,36 +8,36 @@ import asyncio
 from datetime import timedelta
 import logging
 from pathlib import Path
-from typing import List, Dict
+from typing import Dict, List
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Config, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-
+from podpointclient.charge import Charge
 from podpointclient.client import PodPointClient
 from podpointclient.pod import Pod
-from podpointclient.charge import Charge
-
-from .coordinator import PodPointDataUpdateCoordinator
 
 from .const import (
     APP_IMAGE_URL_BASE,
-    CONF_PASSWORD,
     CONF_EMAIL,
     CONF_HTTP_DEBUG,
+    CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     DEFAULT_HTTP_DEBUG,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     PLATFORMS,
     STARTUP_MESSAGE,
-    DEFAULT_SCAN_INTERVAL,
 )
+from .coordinator import PodPointDataUpdateCoordinator
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 # pylint: disable=unused-argument
+
+
 async def async_setup(hass: HomeAssistant, config: Config):
     """Set up this integration using YAML is not supported."""
     return True
@@ -75,7 +75,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     coordinator = PodPointDataUpdateCoordinator(
         hass, client=client, scan_interval=scan_interval
     )
-    await coordinator.async_config_entry_first_refresh()  # Check the credentials we have and ensure that we can perform a refresh
+    # Check the credentials we have and ensure that we can perform a refresh
+    await coordinator.async_config_entry_first_refresh()
 
     # Given a successful inital refresh, store this coordinator for this specific config entry
     hass.data[DOMAIN][entry.entry_id] = coordinator
