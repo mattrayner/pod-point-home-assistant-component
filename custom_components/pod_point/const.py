@@ -27,6 +27,8 @@ UPDATE = "update"
 PLATFORMS = [BINARY_SENSOR, SENSOR, SWITCH, UPDATE]
 ENERGY = "energy"
 
+SERVICE_SET_CHARGE_MODE = "set_charge_mode"
+
 # Configuration and options
 CONF_ENABLED = "enabled"
 CONF_EMAIL = "email"
@@ -86,6 +88,7 @@ ATTR_STATE_CHARGING = "charging"
 ATTR_STATE_OUT_OF_SERVICE = "out-of-service"
 ATTR_STATE_WAITING = "waiting-for-schedule"
 ATTR_STATE_CONNECTED_WAITING = "connected-waiting-for-schedule"
+ATTR_STATE_CHARGE_OVERRIED = "charge-override"
 ATTR_STATE_RANKING = [
     ATTR_STATE_AVAILABLE,
     ATTR_STATE_UNAVAILABLE,
@@ -104,7 +107,7 @@ BASE_API_URL = "https://api.pod-point.com/" + BASE_API_VERSION
 APP_IMAGE_URL_BASE = f"/api/{DOMAIN}/static"
 
 # Pod refresh includes
-LIMITED_POD_INCLUDES = ["statuses", "charge_schedules"]
+LIMITED_POD_INCLUDES = ["statuses", "charge_schedules", "charge_override"]
 
 STARTUP_MESSAGE = f"""
 -------------------------------------------------------------------

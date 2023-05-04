@@ -18,6 +18,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from podpointclient.charge import Charge
 from podpointclient.client import PodPointClient
 from podpointclient.pod import Pod
+# from .services import async_register_services
 
 from .const import (
     APP_IMAGE_URL_BASE,
@@ -96,6 +97,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass.async_add_job(
                 hass.config_entries.async_forward_entry_setup(entry, platform)
             )
+
+    # def handle_set_charge_mode(call):
+    #     return True
+
+    # hass.async_register_entity_service(DOMAIN, "set_charge_mode", handle_set_charge_mode)
+
+    # await async_register_services(hass)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     return True

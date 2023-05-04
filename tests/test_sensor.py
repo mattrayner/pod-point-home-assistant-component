@@ -1,57 +1,52 @@
 """Test pod_point sensors."""
 import asyncio
-import pytest
-import aiohttp
-import homeassistant.helpers.aiohttp_client as client
-from homeassistant.components.sensor import SensorDeviceClass
-from .fixtures import POD_COMPLETE_FIXTURE
-from unittest.mock import call, patch
+from datetime import datetime, timedelta
 from typing import List, Union
-from datetime import datetime
+from unittest.mock import Mock, call, patch
 
+import aiohttp
 from homeassistant.components import switch
+from homeassistant.components.sensor import (
+    STATE_CLASS_TOTAL,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
+)
 from homeassistant.components.switch import SERVICE_TURN_OFF, SERVICE_TURN_ON
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    DEVICE_CLASS_ENERGY,
+    ENERGY_KILO_WATT_HOUR,
+)
+import homeassistant.helpers.aiohttp_client as client
+from podpointclient.charge_override import ChargeOverride
+from podpointclient.pod import Pod
+import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.pod_point import async_setup_entry
 from custom_components.pod_point.const import (
-    CONF_CURRENCY,
-    DEFAULT_NAME,
+    ATTR_STATE,
+    ATTR_STATE_AVAILABLE,
+    ATTR_STATE_CHARGING,
+    ATTR_STATE_CONNECTED_WAITING,
+    ATTR_STATE_OUT_OF_SERVICE,
+    ATTR_STATE_UNAVAILABLE,
+    ATTR_STATE_WAITING,
     DOMAIN,
     SENSOR,
     SWITCH,
-    ATTR_STATE,
-    ATTR_STATE_AVAILABLE,
-    ATTR_STATE_UNAVAILABLE,
-    ATTR_STATE_CHARGING,
-    ATTR_STATE_OUT_OF_SERVICE,
-    ATTR_STATE_WAITING,
-    ATTR_STATE_CONNECTED_WAITING,
 )
 from custom_components.pod_point.sensor import (
+    PodPointAccountBalanceEntity,
+    PodPointChargeOverrideEntity,
     PodPointSensor,
     PodPointTotalEnergySensor,
-    PodPointAccountBalanceEntity,
     async_setup_entry,
 )
 
-from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-    DEVICE_CLASS_ENERGY,
-)
-
-from homeassistant.components.sensor import (
-    STATE_CLASS_TOTAL,
-    STATE_CLASS_TOTAL_INCREASING,
-)
-
-from podpointclient.pod import Pod
-from .test_coordinator import subject_with_data as coordinator_with_data
-
 from .const import MOCK_CONFIG
-
-from unittest.mock import Mock
+from .fixtures import POD_COMPLETE_FIXTURE
+from .test_coordinator import subject_with_data as coordinator_with_data
 
 
 async def setup_sensors(hass) -> List[PodPointSensor]:
@@ -80,7 +75,7 @@ async def test_sensor_creation(hass, bypass_get_data):
 
     (_, sensors) = await setup_sensors(hass)
 
-    assert 7 == len(sensors)
+    assert 9 == len(sensors)
 
 
 @pytest.mark.asyncio
@@ -88,7 +83,7 @@ async def test_status_pod_sensor(hass, bypass_get_data):
     """Tests for pod status sensor."""
     (_, sensors) = await setup_sensors(hass)
 
-    [status, _, _, _, _, _, _] = sensors
+    [status, _, _, _, _, _, _, _, _] = sensors
 
     assert SensorDeviceClass.ENUM == status.device_class
     assert "pod_point_12234_PSL-123456_status" == status.unique_id
@@ -130,7 +125,7 @@ async def test_total_energy_pod_sensor(hass, bypass_get_data):
     (_, sensors) = await setup_sensors(hass)
 
     total_energy: PodPointTotalEnergySensor
-    [_, _, total_energy, _, _, _, _] = sensors
+    [_, _, total_energy, _, _, _, _, _, _] = sensors
 
     total_energy.async_write_ha_state = Mock()
     total_energy._handle_coordinator_update()
@@ -167,7 +162,7 @@ async def test_current_energy_pod_sensor(hass, bypass_get_data):
     """Tests for pod current energy sensor."""
     (_, sensors) = await setup_sensors(hass)
 
-    [_, _, _, current_energy, _, _, _] = sensors
+    [_, _, _, current_energy, _, _, _, _, _] = sensors
 
     assert (
         "pod_point_12234_PSL-123456_status_total_energy_current_charge_energy"
@@ -192,7 +187,7 @@ async def test_total_charge_time_pod_sensor(hass, bypass_get_data):
     """Tests for pod total charge time sensor."""
     (_, sensors) = await setup_sensors(hass)
 
-    [_, charge_time, _, _, _, _, _] = sensors
+    [_, charge_time, _, _, _, _, _, _, _] = sensors
 
     assert "pod_point_12234_PSL-123456_charge_time" == charge_time.unique_id
 
@@ -253,7 +248,7 @@ async def test_total_cost_pod_sensor(hass, bypass_get_data):
     """Tests for pod total charge time sensor."""
     (_, sensors) = await setup_sensors(hass)
 
-    [_, _, _, _, total_cost, _, _] = sensors
+    [_, _, _, _, total_cost, _, _, _, _] = sensors
 
     assert "pod_point_12234_PSL-123456_total_cost" == total_cost.unique_id
 
@@ -313,7 +308,7 @@ async def test_last_charge_cost_pod_sensor(hass, bypass_get_data):
     """Tests for pod total charge time sensor."""
     (_, sensors) = await setup_sensors(hass)
 
-    [_, _, _, _, _, last_charge, _] = sensors
+    [_, _, _, _, _, last_charge, _, _, _] = sensors
 
     assert (
         "pod_point_12234_PSL-123456_last_complete_charge_cost" == last_charge.unique_id
@@ -355,7 +350,7 @@ async def test_balance_sensor(hass, bypass_get_data):
     """Tests for pod total charge time sensor."""
     (_, sensors) = await setup_sensors(hass)
 
-    [_, _, _, _, _, _, balance] = sensors
+    [_, _, _, _, _, _, _, _, balance] = sensors
 
     assert (
         "1a756c9b-dfac-4c2a-ba13-9cdcc2399366" == balance.unique_id
@@ -372,3 +367,51 @@ async def test_balance_sensor(hass, bypass_get_data):
     assert 99.45 == balance.native_value
 
     assert balance.native_unit_of_measurement == "GBP"
+
+@pytest.mark.asyncio
+async def test_charge_mode_sensor(hass, bypass_get_data):
+    """Tests for pod total charge time sensor."""
+    (_, sensors) = await setup_sensors(hass)
+
+    override: PodPointChargeOverrideEntity
+    [_, _, _, _, _, _, _, override, _] = sensors
+
+    assert (
+        "pod_point_12234_PSL-123456_override_end_time" == override.unique_id
+    )
+
+    assert "Charge Override End Time" == override.name
+
+    assert SensorDeviceClass.TIMESTAMP == override.device_class
+    assert override.native_value is None
+    assert override.extra_state_attributes == {'charge_override': None}
+    assert "mdi:battery-clock" == override.icon
+
+    ends_at = (datetime.now().astimezone() + timedelta(hours=3))
+
+    charge_override = ChargeOverride({
+        "ppid": "PSL-123456",
+        "requested_at": datetime.now().astimezone().isoformat(),
+        "received_at": datetime.now().astimezone().isoformat(),
+        "ends_at": ends_at.isoformat()
+    })
+    override.pod.charge_override = charge_override
+    assert override.native_value == ends_at
+
+@pytest.mark.asyncio
+async def test_charge_override_sensor(hass, bypass_get_data):
+    """Tests for pod total charge time sensor."""
+    (_, sensors) = await setup_sensors(hass)
+
+    [_, _, _, _, _, _, mode, _, _] = sensors
+
+    assert (
+        "pod_point_12234_PSL-123456_charge_mode" == mode.unique_id
+    )
+
+    assert "Charge Mode" == mode.name
+
+    assert "enum" == mode.device_class
+    assert "Smart" == mode.native_value
+    assert mode.extra_state_attributes == {'charge_override': None}
+    assert "mdi:car-clock" == mode.icon

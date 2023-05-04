@@ -15,7 +15,7 @@
                 }
             },
             "reauth_confirm": {
-                "description": "Pod Point needs to re-authenticate your account"
+                "description": "Pod Point needs to re-authenticate your account."
             }
         },
         "error": {
@@ -52,7 +52,8 @@
                     "charging": "Charging",
                     "out-of-service": "Out of service",
                     "waiting-for-schedule": "Waiting for schedule",
-                    "connected-waiting-for-schedule": "Connected but waiting for schedule"
+                    "connected-waiting-for-schedule": "Connected but waiting for schedule",
+                    "charge-override": "Charging now (schedule override)"
                 }
             }
         }

@@ -24,6 +24,8 @@ Platform | Description
 `sensor` (Last ***Completed* Charge Cost) | Show the total cost of the last ***completed* charge.
 `sensor` (Completed charge time) | Show a combined 'charge time' value from all charges for a given pod.
 `sensor` (Balance) | Shows the balance on your PodPoint account.
+`sensor` (Charge Mode) | Shows the charge mode your pod is currently in/
+`sensor` (Charge Override End Time) | Shows the end time for any configured 'charge now' override.
 `switch` | Enable/disable  charging.
 `update` (Firmware Update) | Shows the current firmware version for your device and alerts if an update is available
 
@@ -95,6 +97,16 @@ charging | Vehicle is connected and charging is possible. Note: If you car has c
 out-of-service | This pod is not in service. Reach out to Pod Point for more information.
 waiting-for-schedule | Pod charging is currently blocked by schedule. Connecting your vehicle will *not* begin charging.
 connected-waiting-for-schedule | Your vehicle is connected to the pod but charging is currently prevented due to a schedule.
+
+## Charge Modes
+
+Charge modes can be one of the following values, their meanings can be found below:
+
+mode | description
+---|---
+smart | This is your pods 'default' option, charging will follow your schedule, along with other smart functionality including randomly offsetting start and end times to help prevent grid shock.
+override | Your pod is in 'smart' mode, but you have set an override (a time period where your pod will ignore the schedule and charge). This is designed to be used when you need to charge ourside your normal schedule, and dont want to modify the underlying schedule.
+manual | This mode means your pod is not set to a schedule, and does not follow the offsets for start and end times, when you plug it in, it will charge.
 
 ## Energy sensors
 
