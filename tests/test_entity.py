@@ -1,24 +1,32 @@
 """Test pod_point switch."""
-import asyncio
-import pytest
-from email.utils import encode_rfc2231
-
-import aiohttp
-import homeassistant.helpers.aiohttp_client as client
-
-from custom_components.pod_point.entity import PodPointEntity
-from .fixtures import POD_COMPLETE_FIXTURE
-from unittest.mock import call, patch
-from typing import List
+# import asyncio
 from datetime import datetime
+from email.utils import encode_rfc2231
+from typing import List
+from unittest.mock import Mock, call, patch
 
+# import aiohttp
 from homeassistant.components import switch
+from homeassistant.components.sensor import (
+    STATE_CLASS_TOTAL,
+    STATE_CLASS_TOTAL_INCREASING,
+)
 from homeassistant.components.switch import SERVICE_TURN_OFF, SERVICE_TURN_ON
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    DEVICE_CLASS_ENERGY,
+    ENERGY_KILO_WATT_HOUR,
+)
+import homeassistant.helpers.aiohttp_client as client
+from podpointclient.charge_mode import ChargeMode
+from podpointclient.pod import Pod
+from podpointclient.schedule import Schedule, ScheduleStatus
+import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.pod_point import async_setup_entry
 from custom_components.pod_point.const import (
+    ATTR_STATE,
     ATTR_STATE_AVAILABLE,
     ATTR_STATE_OUT_OF_SERVICE,
     ATTR_STATE_UNAVAILABLE,
@@ -26,32 +34,17 @@ from custom_components.pod_point.const import (
     DOMAIN,
     SENSOR,
     SWITCH,
-    ATTR_STATE,
 )
+from custom_components.pod_point.entity import PodPointEntity
 from custom_components.pod_point.sensor import (
     PodPointSensor,
     PodPointTotalEnergySensor,
     async_setup_entry,
 )
 
-from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-    DEVICE_CLASS_ENERGY,
-)
-
-from homeassistant.components.sensor import (
-    STATE_CLASS_TOTAL,
-    STATE_CLASS_TOTAL_INCREASING,
-)
-
-from podpointclient.pod import Pod
-from podpointclient.charge_mode import ChargeMode
-from podpointclient.schedule import Schedule, ScheduleStatus
-from .test_coordinator import subject_with_data as coordinator_with_data
-
 from .const import MOCK_CONFIG
-
-from unittest.mock import Mock
+from .fixtures import POD_COMPLETE_FIXTURE
+from .test_coordinator import subject_with_data as coordinator_with_data
 
 
 async def setup_entity(hass) -> Pod:
