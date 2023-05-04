@@ -41,9 +41,10 @@ class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
         self.charges_perpage_update = (
             3  # Fetching an update, unlikely to change from poll to poll by more than 1
         )
-        self.pod_dict = None
-        self.online = None
-        self.firmware_refresh = 1  # Initial refresh will be a firmware refresh too, ensuring we pull firmware for all pods at startup
+        self.pod_dict: Dict[str, Pod] = None
+        self.online: bool = None
+        # Initial refresh will be a firmware refresh, ensuring we pull firmware data at startup
+        self.firmware_refresh = 1
         self.user: User = None
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=scan_interval)
@@ -56,54 +57,37 @@ class PodPointDataUpdateCoordinator(DataUpdateCoordinator):
             self.pod_dict: Dict[int, Pod] = None
 
             self.user = await self.api.async_get_user()
-            new_pods = await self.__async_update_pods()
-
-            _LOGGER.debug(
-                "=== POD UPDATE ===\nFound Pods: %s\nPrevious Pods: %s",
-                len(new_pods),
-                len(self.pods),
-            )
 
             # Group Pods by ID so that we can organise our charges into the pods
             # they were performed on
-            new_pods_by_id = self.__group_pods_by_unit_id(pods=new_pods)
+            (new_pods, new_pods_by_id) = await self.__async_group_pods(
+                await self.__async_update_pods()
+            )
 
-            (new_pods, new_pods_by_id) = await self.__async_group_pods(new_pods, new_pods_by_id)
-
-            new_pods_by_id = self.__group_pods_by_unit_id(pods=new_pods)
+            _LOGGER.debug('New pods and grouped:')
+            _LOGGER.debug(new_pods)
+            _LOGGER.debug('----')
+            _LOGGER.debug(new_pods_by_id)
 
             # Fetch firmware data for pods, if it is needed
             self.firmware_refresh -= 1
             if self.firmware_refresh <= 0:
                 new_pods_by_id = await self.__async_refresh_firmware(new_pods, new_pods_by_id)
 
-            # Determine if we should fetch for all charges, or just the most recent for a user.
-            should_fetch_all_charges = self.__should_fetch_all_charges(
-                new_pods=new_pods
-            )
-
             # Fetch a list of new charges
             new_charges: List[Charge] = await self.__fetch_home_charges(
-                all_charges=should_fetch_all_charges
+                # Determine if we should fetch all charges or a sub-set
+                all_charges=self.__should_fetch_all_charges(new_pods=new_pods)
             )
 
             # We will filter out any of the new charges from the existing list. This will
             # ensure any overlap is not duplicated.
-            new_charge_ids: Set(int) = set([charge.id for charge in new_charges])
+            new_charge_ids: Set(int) = { charge.id for charge in new_charges }
             combined_home_charges: List[Charge] = new_charges + [
                 charge
                 for charge in self.home_charges
                 if charge.id not in new_charge_ids
             ]
-
-            _LOGGER.debug(
-                "=== CHARGE UPDATE ===\nShould get all charges: %s\nPrevious Charges: %s\n\
-Updated Charges: %s\nCombined Charges: %s",
-                should_fetch_all_charges,
-                len(self.home_charges),
-                len(new_charges),
-                len(combined_home_charges),
-            )
 
             # Store charges for next refresh
             self.home_charges = combined_home_charges
@@ -143,12 +127,14 @@ Updated Charges: %s\nCombined Charges: %s",
                 else:
                     pod.current_kwh = charge.kwh_used
 
-            self.pods = list(new_pods_by_id.values())
-
             if self.online is False:
                 _LOGGER.info("Connection to Pod Point re-established.")
-            self.online = True
+                self.online = True
 
+            self.pod_dict = new_pods_by_id
+            self.pods = list(new_pods_by_id.values())
+
+            _LOGGER.debug(self.pods)
             return self.pods  # sets coordinator.data
 
         except ApiConnectionError as exception:
@@ -187,8 +173,8 @@ If this issue persists, please contact the developer."
         for pod in pods:
             pod_dict[pod.unit_id] = pod
 
-        self.pod_dict = pod_dict
-        return self.pod_dict
+        # self.pod_dict = pod_dict
+        return pod_dict
 
     async def __fetch_home_charges(self, all_charges: bool = True) -> List[Charge]:
         """Fetch either all charges for a user, or progressively paginate until you have the latest
@@ -258,9 +244,11 @@ expecting more charges. Page {page}, looking for : {last_charge_ids}"
 
         return fetch_all_charges
 
-    def __combine_pods(self, new_pods_by_id: Dict[str, Pod]) -> List[Pod]:
+    def __combine_pods(self, new_pods: Dict[str, Pod]) -> List[Pod]:
         """Given a new set of pods, combine them with the existing pod data to create a new list"""
-        new_pods: List[Pod] = []
+        combined_pods: List[Pod] = []
+
+        new_pods_by_id = self.__group_pods_by_unit_id(pods=new_pods)
 
         for previous_pod in self.pods:
             new_pod = new_pods_by_id[previous_pod.unit_id]
@@ -269,19 +257,20 @@ expecting more charges. Page {page}, looking for : {last_charge_ids}"
             new_pod.unit_connectors = previous_pod.unit_connectors
             new_pod.firmware = previous_pod.firmware
 
-            new_pods.append(new_pod)
+            combined_pods.append(new_pod)
 
-        return new_pods
+        return combined_pods
 
     def __pods_match(self, new_pods: List[Pod]) -> bool:
-        set1 = set((pod.id) for pod in self.pods)
+        set1 = { (pod.id) for pod in self.pods }
         difference = [pod for pod in new_pods if (pod.id) not in set1]
 
         # Is there a difference in the pod IDs?
         return len(difference) == 0
 
+    @staticmethod
     def __process_repair_notification(
-        self, hass: HomeAssistant, firmware: Firmware, pod: Pod
+        hass: HomeAssistant, firmware: Firmware, pod: Pod
     ):
         if firmware.update_available:
             ir.async_create_issue(
@@ -299,28 +288,30 @@ expecting more charges. Page {page}, looking for : {last_charge_ids}"
             ir.async_delete_issue(hass, DOMAIN, "firmware_update")
 
     async def __async_update_pods(self) -> List[Pod]:
+        updated_pods: List[Pod] = []
+
         # Should we get a limited set of data (subsiquent refreshes)
         if len(self.pods) > 0:
             _LOGGER.debug("Existing pods found, performing a limited data pull")
-            return await self.api.async_get_all_pods(
+            updated_pods = await self.api.async_get_all_pods(
                 includes=LIMITED_POD_INCLUDES
             )
         else:
             _LOGGER.debug("No existing pods found, performing a full data pull")
-            return await self.api.async_get_all_pods()
+            updated_pods = await self.api.async_get_all_pods()
+
+        return updated_pods
 
     async def __async_group_pods(
         self,
-        new_pods,
-        new_pods_by_id
+        new_pods
     ) -> Tuple[List[Pod], Dict[str, Pod]]:
         # Attempt to update our new pods with additional data from the existing pods.
         # This allows us to query less data each refresh, kinder on the Pod Point APIs.
         if self.__pods_match(new_pods=new_pods):
             # Created an updated list of pods combining old and new data
             _LOGGER.debug("Combining new and old pods")
-            new_pods = self.__combine_pods(new_pods_by_id=new_pods_by_id)
-            new_pods_by_id = self.__group_pods_by_unit_id(pods=new_pods)
+            new_pods = self.__combine_pods(new_pods=new_pods)
         elif (
             len(self.pods) > 0
         ):  # Ensure that we are not re-querying if this is he first run
@@ -329,6 +320,8 @@ expecting more charges. Page {page}, looking for : {last_charge_ids}"
             )
             new_pods = await self.api.async_get_all_pods()
 
+        # Group the pods we have
+        new_pods_by_id = self.__group_pods_by_unit_id(pods=new_pods)
         return (new_pods, new_pods_by_id)
 
     async def __async_refresh_firmware(

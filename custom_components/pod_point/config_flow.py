@@ -1,27 +1,27 @@
 """Adds config flow for Pod Point."""
 import logging
-from typing import Any, Dict
+from typing import Dict
+
 from homeassistant import config_entries
-from homeassistant.core import callback
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.components import dhcp
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from podpointclient.client import PodPointClient
 import voluptuous as vol
 
-from podpointclient.client import PodPointClient
-
 from .const import (
+    CONF_CURRENCY,
+    CONF_EMAIL,
     CONF_HTTP_DEBUG,
     CONF_PASSWORD,
-    CONF_EMAIL,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_CURRENCY,
     DEFAULT_HTTP_DEBUG,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     PLATFORMS,
-    CONF_SCAN_INTERVAL,
-    DEFAULT_SCAN_INTERVAL,
-    CONF_CURRENCY,
-    DEFAULT_CURRENCY,
 )
 
 _LOGGER = logging.getLogger(__name__)

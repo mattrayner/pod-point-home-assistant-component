@@ -15,7 +15,7 @@
                 }
             },
             "reauth_confirm": {
-                "description": "Pod Point needs to re-authenticate your account"
+                "description": "Pod Point needs to re-authenticate your account."
             }
         },
         "error": {
@@ -37,7 +37,7 @@
                     "switch": "Charging switch enabled.",
                     "scan_interval": "Poll interval (seconds)",
                     "http_debug": "Enable verbose HTTP logging.",
-                    "update": "Enable firmware sensor",
+                    "update": "Enable firmware sensor.",
                     "currency": "Currency used for cost sensors"
                 }
             }
@@ -52,7 +52,8 @@
                     "charging": "Charging",
                     "out-of-service": "Out of service",
                     "waiting-for-schedule": "Waiting for schedule",
-                    "connected-waiting-for-schedule": "Connected but waiting for schedule"
+                    "connected-waiting-for-schedule": "Connected but waiting for schedule",
+                    "charge-override": "Charging now (schedule override)"
                 }
             }
         }

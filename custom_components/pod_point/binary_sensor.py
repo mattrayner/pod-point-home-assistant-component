@@ -1,18 +1,15 @@
 """Binary sensor platform for pod_point."""
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorEntity,
     BinarySensorDeviceClass,
+    BinarySensorEntity,
 )
 
-from .const import (
-    ATTR_STATE,
-    DOMAIN,
-)
-from .entity import PodPointEntity
+from .const import ATTR_STATE, DOMAIN
 from .coordinator import PodPointDataUpdateCoordinator
+from .entity import PodPointEntity
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 

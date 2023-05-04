@@ -1,33 +1,32 @@
 """PodPointEntity class"""
+from datetime import datetime, timedelta
 import logging
 from typing import Any, Dict, List
-from datetime import datetime, timedelta
 
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.helpers.entity import Entity
-from homeassistant.core import callback
 from homeassistant.config_entries import ConfigEntry
-
+from homeassistant.core import callback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from podpointclient.charge_mode import ChargeMode
+from podpointclient.charge_override import ChargeOverride
 from podpointclient.pod import Pod
 from podpointclient.schedule import Schedule
 
+from .const import (
+    APP_IMAGE_URL_BASE,
+    ATTR_STATE,
+    ATTR_STATE_AVAILABLE,
+    ATTR_STATE_CHARGING,
+    ATTR_STATE_CONNECTED_WAITING,
+    ATTR_STATE_RANKING,
+    ATTR_STATE_WAITING,
+    ATTRIBUTION,
+    CHARGING_FLAG,
+    DOMAIN,
+    NAME,
+)
 from .coordinator import PodPointDataUpdateCoordinator
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
-
-from .const import (
-    ATTR_STATE_AVAILABLE,
-    ATTR_STATE_CHARGING,
-    DOMAIN,
-    NAME,
-    ATTRIBUTION,
-    ATTR_STATE_RANKING,
-    ATTR_STATE,
-    ATTR_STATE_WAITING,
-    ATTR_STATE_CONNECTED_WAITING,
-    APP_IMAGE_URL_BASE,
-    CHARGING_FLAG,
-)
 
 
 class PodPointEntity(CoordinatorEntity):
@@ -57,6 +56,7 @@ class PodPointEntity(CoordinatorEntity):
             "total_kwh": pod.total_kwh,
             "total_charge_seconds": pod.total_charge_seconds,
             "current_kwh": pod.current_kwh,
+            "charge_mode": pod.charge_mode
         }
 
         attrs.update(pod.dict)
@@ -67,15 +67,33 @@ class PodPointEntity(CoordinatorEntity):
 
         is_available_state = state == ATTR_STATE_AVAILABLE
         is_charging_state = state == ATTR_STATE_CHARGING
+        is_override_charge_mode = pod.charge_mode == ChargeMode.OVERRIDE
+        is_manual_charge_mode = pod.charge_mode == ChargeMode.MANUAL
         charging_not_allowed = self.charging_allowed is False
         should_be_waiting_state = is_available_state and charging_not_allowed
         should_be_connected_waiting_state = is_charging_state and charging_not_allowed
+        should_be_available = is_available_state and (
+            is_override_charge_mode
+            or is_manual_charge_mode
+        )
+        should_be_charging = is_charging_state and (
+            is_override_charge_mode
+            or is_manual_charge_mode
+        )
 
         if should_be_waiting_state:
             state = ATTR_STATE_WAITING
 
         if should_be_connected_waiting_state:
             state = ATTR_STATE_CONNECTED_WAITING
+
+        # Pod should be available if pod is available and state is overriden, or manual charge mode
+        if should_be_available:
+            state = ATTR_STATE_AVAILABLE
+
+        # Pod should be charging if pod is charging and state is overriden, or manual charge mode
+        if should_be_charging:
+            state = ATTR_STATE_CHARGING
 
         attrs[ATTR_STATE] = state
 
@@ -136,9 +154,18 @@ class PodPointEntity(CoordinatorEntity):
         """Is charging allowed by schedule?"""
         pod: Pod = self.coordinator.data[self.pod_id]
         schedules: List[Schedule] = pod.charge_schedules
+        override: ChargeOverride = pod.charge_override
+
+        # Are we in 'manual' mode?
+        if pod.charge_mode == ChargeMode.MANUAL:
+            return True
 
         # No schedules are found, we will assume we can charge
         if len(schedules) <= 0:
+            return True
+
+        # If there is a charge override in place, we can charge
+        if override is not None and override.active:
             return True
 
         weekday = datetime.today().weekday() + 1
@@ -231,12 +258,12 @@ class PodPointEntity(CoordinatorEntity):
     @property
     def serial_number(self) -> str:
         """Return the serial number, or ppid"""
-        sn: str = self.pod.ppid
+        serial_number: str = self.pod.ppid
 
         if self.pod.firmware:
-            sn = self.pod.firmware.serial_number
+            serial_number = self.pod.firmware.serial_number
 
-        return sn
+        return serial_number
 
     @property
     def image(self) -> str:
@@ -249,7 +276,8 @@ class PodPointEntity(CoordinatorEntity):
         status = self.extra_state_attributes.get(ATTR_STATE, "")
         return status in (CHARGING_FLAG, ATTR_STATE_CONNECTED_WAITING)
 
-    def compare_state(self, state, pod_state) -> str:
+    @staticmethod
+    def compare_state(state, pod_state) -> str:
         """Given two states, which one is most important"""
         ranking = ATTR_STATE_RANKING
 
@@ -297,7 +325,8 @@ class PodPointEntity(CoordinatorEntity):
     def __model_slug(self) -> List[str]:
         return self.model.upper()[3:8].split("-")
 
-    def _td_format(self, td_object):
+    @staticmethod
+    def _td_format(td_object):
         seconds = int(td_object.total_seconds())
         periods = [
             ("year", 60 * 60 * 24 * 365),
@@ -313,7 +342,7 @@ class PodPointEntity(CoordinatorEntity):
             if seconds > period_seconds:
                 period_value, seconds = divmod(seconds, period_seconds)
                 has_s = "s" if period_value > 1 else ""
-                strings.append("%s %s%s" % (period_value, period_name, has_s))
+                strings.append(f'{period_value} {period_name}{has_s}')
 
         output = "0s"
         if len(strings) > 0:

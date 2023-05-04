@@ -45,6 +45,7 @@ from homeassistant.components.sensor import (
 )
 
 from podpointclient.pod import Pod
+from podpointclient.charge_mode import ChargeMode
 from podpointclient.schedule import Schedule, ScheduleStatus
 from .test_coordinator import subject_with_data as coordinator_with_data
 
@@ -211,6 +212,7 @@ async def test_pod_point_entity(hass, bypass_get_data):
         "unit_id": 123456,
         "total_cost": 0,
         'firmware': {'serial_number': '123456789', 'update_status': {'is_update_available': False}, 'version_info': {'manifest_id': 'A30P-3.1.22-00001'}},
+        'charge_mode': ChargeMode.SMART, 'charge_override': None
     } == entity.extra_state_attributes
 
     assert True is entity.charging_allowed

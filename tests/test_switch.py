@@ -19,7 +19,6 @@ from podpointclient.pod import Pod
 
 from .const import MOCK_CONFIG
 
-
 @pytest.mark.asyncio
 @pytest.mark.enable_socket
 async def test_switch_services(hass, bypass_get_data):

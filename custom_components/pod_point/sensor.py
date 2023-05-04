@@ -1,20 +1,21 @@
 """Sensor platform for pod_point."""
-import logging
-from typing import Dict, Any
 from datetime import datetime, timedelta, timezone
+import logging
+from typing import Any, Dict
 
-from podpointclient.pod import Pod
-from podpointclient.user import User
-
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.components.sensor import (
-    SensorEntity,
     SensorDeviceClass,
+    SensorEntity,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfEnergy, UnitOfTime
 from homeassistant.core import callback
-from homeassistant.const import UnitOfTime, UnitOfEnergy
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from podpointclient.pod import Pod
+from podpointclient.charge_mode import ChargeMode
+from podpointclient.charge_override import ChargeOverride
+from podpointclient.user import User
 
 from .const import (
     ATTR_STATE,
@@ -32,8 +33,8 @@ from .const import (
     ICON_1C,
     ICON_2C,
 )
-from .entity import PodPointEntity
 from .coordinator import PodPointDataUpdateCoordinator
+from .entity import PodPointEntity
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -54,6 +55,8 @@ async def async_setup_entry(hass, entry, async_add_devices):
         ppces = PodPointCurrentEnergySensor(coordinator, entry, i)
         pptcs = PodPointTotalCostSensor(coordinator, entry, i)
         pplcccs = PodPointLastCompleteChargeCostSensor(coordinator, entry, i)
+        charge_mode = PodPointChargeModeEntity(coordinator, entry, i)
+        charge_override = PodPointChargeOverrideEntity(coordinator, entry, i)
         balance = PodPointAccountBalanceEntity(coordinator, entry)
 
         sensors.append(pps)
@@ -62,6 +65,9 @@ async def async_setup_entry(hass, entry, async_add_devices):
         sensors.append(ppces)
         sensors.append(pptcs)
         sensors.append(pplcccs)
+        sensors.append(charge_mode)
+        sensors.append(charge_override)
+
         sensors.append(balance)
 
     async_add_devices(sensors)
@@ -155,7 +161,8 @@ class PodPointChargeTimeSensor(
 class PodPointTotalEnergySensor(PodPointSensor):
     """pod_point total energy Sensor class."""
 
-    _attr_options = None  # Override the options from PodPointSensor (prevents an error as this sensor is an 'energy' type)
+    # Override the options from PodPointSensor, prevents an error as this sensor is an 'energy' type
+    _attr_options = None
     _attr_translation_key = None
     _attr_has_entity_name = True
     _attr_name = "Total Energy"
@@ -259,6 +266,87 @@ class PodPointCurrentEnergySensor(PodPointTotalEnergySensor):
         return icon
 
 
+class PodPointChargeModeEntity(
+    PodPointEntity,
+    SensorEntity,
+):
+    """pod_point charge mode sensor class."""
+
+    _attr_options = [
+        ChargeMode.MANUAL,
+        ChargeMode.SMART,
+        ChargeMode.OVERRIDE
+    ]
+    _attr_has_entity_name = True
+    _attr_name = "Charge Mode"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_icon = "mdi:car-clock"
+
+    @property
+    def unique_id(self):
+        return f"{super().unique_id}_charge_mode"
+
+    @property
+    def extra_state_attributes(self) -> Dict[str, Any]:
+        charge_override = None
+        if self.pod.charge_override is not None:
+            charge_override = self.pod.charge_override.dict
+
+        return {
+            "charge_override": charge_override
+        }
+
+    @property
+    def native_value(self):
+        """Return the native value of the sensor."""
+        return self.pod.charge_mode
+
+    @property
+    def entity_picture(self) -> str:
+        return None
+
+
+class PodPointChargeOverrideEntity(
+    PodPointEntity,
+    SensorEntity,
+):
+    """pod_point charge mode sensor class."""
+
+    _attr_has_entity_name = True
+    _attr_name = "Charge Override End Time"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_icon = "mdi:battery-clock"
+
+    @property
+    def unique_id(self):
+        return f"{super().unique_id}_override_end_time"
+
+    @property
+    def extra_state_attributes(self) -> Dict[str, Any]:
+        charge_override = None
+        if self.pod.charge_override is not None:
+            charge_override = self.pod.charge_override.dict
+
+        return {
+            "charge_override": charge_override
+        }
+
+    @property
+    def native_value(self):
+        """Return the native value of the sensor."""
+        value = None
+        override: ChargeOverride = self.pod.charge_override
+
+        if override is not None:
+            value = override.ends_at
+
+        return value
+
+    @property
+    def entity_picture(self) -> str:
+        return None
+
+
 class PodPointTotalCostSensor(
     PodPointEntity,
     SensorEntity,
@@ -278,7 +366,7 @@ class PodPointTotalCostSensor(
     def currency(self) -> str:
         """Which currency type are we returning?"""
 
-        # TODO - Should we use the default currency from HA here? Seems weird to specify a aeperate value here...
+        # TODO - Should use the default currency from HA here
         try:
             currency = self.config_entry.options[CONF_CURRENCY]
         except KeyError:
