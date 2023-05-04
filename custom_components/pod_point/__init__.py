@@ -18,7 +18,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from podpointclient.charge import Charge
 from podpointclient.client import PodPointClient
 from podpointclient.pod import Pod
-# from .services import async_register_services
 
 from .const import (
     APP_IMAGE_URL_BASE,
@@ -33,6 +32,9 @@ from .const import (
     STARTUP_MESSAGE,
 )
 from .coordinator import PodPointDataUpdateCoordinator
+
+# from .services import async_register_services
+
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
