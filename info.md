@@ -179,7 +179,7 @@ If you want to contribute to this please read the [Contribution guidelines](CONT
 [commits]: https://github.com/mattrayner/pod-point-home-assistant-component/commits/master
 [hacs]: https://github.com/custom-components/hacs
 [hacsbadge]: https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge
-[exampleimg]: https://github.com/mattrayner/pod-point-home-assistant-component/raw/94a36148c598353b8494b1dc9e8277a208c1c185/example.png
+[exampleimg]: https://github.com/mattrayner/pod-point-home-assistant-component/raw/ae52931c746b5d0b2d91a150b6140ad100e82a91/example.png
 [whichpodimg]: https://github.com/mattrayner/pod-point-home-assistant-component/raw/ef2c39788cdcd85d08a9adab1c06d74c51d38993/which_pod.png
 [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge
 [forum]: https://community.home-assistant.io/
