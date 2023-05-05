@@ -1,23 +1,17 @@
 """Test pod_point switch."""
-import asyncio
-import pytest
+from unittest.mock import patch
 
-import aiohttp
-import homeassistant.helpers.aiohttp_client as client
-from .fixtures import POD_COMPLETE_FIXTURE
-from unittest.mock import call, patch
-
-from homeassistant.components import switch
 from homeassistant.components.switch import SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.const import ATTR_ENTITY_ID
+from podpointclient.pod import Pod
+import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.pod_point import async_setup_entry
-from custom_components.pod_point.const import DEFAULT_NAME, DOMAIN, SWITCH
-
-from podpointclient.pod import Pod
+from custom_components.pod_point.const import DOMAIN, SWITCH
 
 from .const import MOCK_CONFIG
+
 
 @pytest.mark.asyncio
 @pytest.mark.enable_socket
