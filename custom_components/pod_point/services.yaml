@@ -1,0 +1,40 @@
+charge_now:
+  name: Set Pod Point Pod to 'Charge Now'
+  description: >-
+    Sets a pod to 'Charge Now' for a duration specified. Used to override a schedule temporarily, allowing you to charge for a certain period only. Please allow 5 minutes for mode to change on the pod.
+
+  fields:
+    config_entry_id:
+      name: Pod
+      description: The Pod we will set a 'Charge Now' for.
+      required: true
+      selector:
+        config_entry:
+          integration: pod_point
+    hours:
+      name: Hour(s)
+      description: How many hours would you like to enable 'Charge Now' for?
+      required: false
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 23
+    minutes:
+      name: Minute(s)
+      description: How many minutes would you like to enable 'Charge Now' for?
+      required: false
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 59
+    seconds:
+      name: Seconds(s)
+      description: How many seconds would you like to enable 'Charge Now' for?
+      required: false
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 59

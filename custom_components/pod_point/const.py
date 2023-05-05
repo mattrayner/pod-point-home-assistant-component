@@ -27,7 +27,7 @@ UPDATE = "update"
 PLATFORMS = [BINARY_SENSOR, SENSOR, SWITCH, UPDATE]
 ENERGY = "energy"
 
-SERVICE_SET_CHARGE_MODE = "set_charge_mode"
+SERVICE_CHARGE_NOW = "charge_now"
 
 # Configuration and options
 CONF_ENABLED = "enabled"
@@ -95,6 +95,11 @@ ATTR_STATE_RANKING = [
     ATTR_STATE_CHARGING,
     ATTR_STATE_OUT_OF_SERVICE,
 ]
+
+ATTR_CONFIG_ENTRY_ID = "config_entry_id"
+ATTR_HOURS = "hours"
+ATTR_MINUTES = "minutes"
+ATTR_SECONDS = "seconds"
 
 # Flags
 CHARGING_FLAG = ATTR_STATE_CHARGING
