@@ -32,6 +32,7 @@ from .const import (
     STARTUP_MESSAGE,
 )
 from .coordinator import PodPointDataUpdateCoordinator
+from .services import async_register_services, async_deregister_services
 
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -99,6 +100,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             )
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+
+    # Register the services
+    await async_register_services(hass)
+
     return True
 
 
@@ -111,7 +116,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 hass.config_entries.async_forward_entry_unload(entry, platform)
                 for platform in PLATFORMS
                 if platform in coordinator.platforms
-            ]
+            ],
+            async_deregister_services(hass)
         )
     )
     if unloaded:
