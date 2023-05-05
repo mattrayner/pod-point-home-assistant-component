@@ -22,13 +22,15 @@ async def async_setup_entry(hass, entry, async_add_devices):
     switches = []
 
     for i in range(len(coordinator.data)):
-        switch = PodPointBinarySwitch(coordinator, entry, i)
+        charging_allowed_switch = PodPointChargingAllowedSwitch(coordinator, entry, i)
+        charge_mode_switch = PodPointChargeModeSwitch(coordinator, entry, i)
 
-        switches.append(switch)
+        switches.append(charging_allowed_switch)
+        switches.append(charge_mode_switch)
     async_add_devices(switches)
 
 
-class PodPointBinarySwitch(PodPointEntity, SwitchEntity):
+class PodPointChargingAllowedSwitch(PodPointEntity, SwitchEntity):
     """pod_point switch class."""
 
     _attr_has_entity_name = True
@@ -75,3 +77,33 @@ class PodPointBinarySwitch(PodPointEntity, SwitchEntity):
             self.pod.charge_override is not None
             and self.pod.charge_override.active
         )
+
+
+class PodPointChargeModeSwitch(PodPointEntity, SwitchEntity):
+    """pod_point switch class."""
+
+    _attr_name = "Smart Charge Mode"
+    _attr_icon = "mdi:cog"
+    _attr_has_entity_name = True
+
+    async def async_turn_on(self, **kwargs):  # pylint: disable=unused-argument
+        """Set charge mode to smart"""
+        api: PodPointClient = self.coordinator.api
+        await api.async_set_charge_mode_smart(self.pod)
+
+        await self.coordinator.async_request_refresh()
+
+    async def async_turn_off(self, **kwargs):  # pylint: disable=unused-argument
+        """Set charge mode to manual"""
+        api: PodPointClient = self.coordinator.api
+        await api.async_set_charge_mode_manual(self.pod)
+
+        await self.coordinator.async_request_refresh()
+
+    @property
+    def unique_id(self):
+        return f"{super().unique_id}_smart_charge_mode"
+
+    @property
+    def is_on(self):
+        return self.pod.charge_mode == ChargeMode.SMART
