@@ -117,7 +117,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 for platform in PLATFORMS
                 if platform in coordinator.platforms
             ],
-            async_deregister_services(hass)
         )
     )
     if unloaded:
