@@ -73,7 +73,7 @@ async def test_charge_mode_switch(hass, bypass_get_data):
         )
         assert smart_mode_func.called
 
-        pod_type = type(smart_mode_func.call_args.args[1])
+        pod_type = type(smart_mode_func.call_args.args[0])
         assert Pod == pod_type
 
     with patch("podpointclient.client.PodPointClient.async_set_charge_mode_manual") as manual_mode_func:
@@ -85,5 +85,5 @@ async def test_charge_mode_switch(hass, bypass_get_data):
         )
         assert manual_mode_func.called
 
-        pod_type = type(manual_mode_func.call_args.args[1])
+        pod_type = type(manual_mode_func.call_args.args[0])
         assert Pod == pod_type
