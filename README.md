@@ -160,6 +160,8 @@ entities:
     name: Pod Status
   - entity: sensor.psl_xxxxxx_charge_mode
     name: Charge Mode
+  - entity: sensor.psl_xxxxxx_charge_override_end_time
+    name: Charge Mode
   - entity: binary_sensor.psl_xxxxxx_cable_status
     name: Cable Status
   - entity: switch.psl_xxxxxx_charging_allowed
