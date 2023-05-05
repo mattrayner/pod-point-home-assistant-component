@@ -98,13 +98,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 hass.config_entries.async_forward_entry_setup(entry, platform)
             )
 
-    # def handle_set_charge_mode(call):
-    #     return True
-
-    # hass.async_register_entity_service(DOMAIN, "set_charge_mode", handle_set_charge_mode)
-
-    # await async_register_services(hass)
-
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     return True
 
