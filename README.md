@@ -12,7 +12,7 @@
 
 _Unofficial component to integrate with [Pod Point][pod_point_web] Solo/Solo 3 charging points._
 
-**This component will set up the following platforms.**
+**This component will set up the following platforms and services.**
 
 Platform | Description
 -- | --
@@ -25,14 +25,25 @@ Platform | Description
 `sensor` (Completed charge time) | Show a combined 'charge time' value from all charges for a given pod.
 `sensor` (Balance) | Shows the balance on your PodPoint account.
 `sensor` (Charge Mode) | Shows the charge mode your pod is currently in/
-`sensor` (Charge Override End Time) | Shows the end time for any configured 'charge now' override.
-`switch` (Allow Charging) | Enable/disable charging by enabling/disabling a schedule.
+`sensor` (***Charge Override End Time) | Shows the end time for any configured 'charge now' override.
+`switch` (****Allow Charging) | Enable/disable charging by enabling/disabling a schedule.
 `switch` (Smart Charge Mode) | Enable the switch for 'Smart' charge mode, disable it for 'Manual' charge mode.
 `update` (Firmware Update) | Shows the current firmware version for your device and alerts if an update is available
 
 > ***Total cost is based on the energy provider and kWh cost set in Pod Point.**
 
->****Charges are considered complete by Pod Point when you disconnect the vehicle, not when power delivery stops.**
+> ****Charges are considered complete by Pod Point when you disconnect the vehicle, not when power delivery stops.**
+
+> *****Charge override end time will be 'Unknown' if there is no charge override ('charge now') set. Or, the time when the charge override ends.**
+
+> ******When in either `Manual` or `Override` charge mode, the `Allow Charging` switch is inactive. This is because setting a schedule will not affect the charge in these modes.**
+
+Service | Params
+---|---
+`charge_now` - Set a charge override for a time period | `account` - Pod Point account we're setting `charge_now` for.
+&nbsp; | `hours` (0-24) - How many hours should the charge override last for?
+&nbsp; | `minutes` (0-59) - How many minutes should the charge override last for?
+&nbsp; | `seconds` (0-59) - How many seconds should the charge override last for?
 
 ![example][exampleimg]
 ![example][chargetimeimg]
