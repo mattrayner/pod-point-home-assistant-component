@@ -5,8 +5,8 @@ charge_now:
 
   fields:
     config_entry_id:
-      name: Pod
-      description: The Pod we will set a 'Charge Now' for.
+      name: Pod Point Account
+      description: The account we will be setting a charge_now value for.
       required: true
       selector:
         config_entry:
