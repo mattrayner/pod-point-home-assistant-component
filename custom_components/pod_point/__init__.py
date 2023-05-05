@@ -33,8 +33,6 @@ from .const import (
 )
 from .coordinator import PodPointDataUpdateCoordinator
 
-# from .services import async_register_services
-
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
