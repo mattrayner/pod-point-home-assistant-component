@@ -1,13 +1,10 @@
-"""Services for the Picnic integration."""
-# from __future__ import annotations
-
-from typing import List, cast
+"""Services for the Pod Point integration."""
+from typing import List
 
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from podpointclient.client import PodPointClient
 from podpointclient.pod import Pod
-# from python_picnic_api import PicnicAPI
 import voluptuous as vol
 
 from .const import (
