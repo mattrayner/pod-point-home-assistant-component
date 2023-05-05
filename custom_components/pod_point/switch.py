@@ -106,4 +106,4 @@ class PodPointChargeModeSwitch(PodPointEntity, SwitchEntity):
 
     @property
     def is_on(self):
-        return self.pod.charge_mode == ChargeMode.SMART
+        return self.pod.charge_mode == ChargeMode.SMART or self.pod.charge_mode == ChargeMode.OVERRIDE

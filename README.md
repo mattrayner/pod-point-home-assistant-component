@@ -26,7 +26,8 @@ Platform | Description
 `sensor` (Balance) | Shows the balance on your PodPoint account.
 `sensor` (Charge Mode) | Shows the charge mode your pod is currently in/
 `sensor` (Charge Override End Time) | Shows the end time for any configured 'charge now' override.
-`switch` | Enable/disable  charging.
+`switch` (Allow Charging) | Enable/disable charging by enabling/disabling a schedule.
+`switch` (Smart Charge Mode) | Enable the switch for 'Smart' charge mode, disable it for 'Manual' charge mode.
 `update` (Firmware Update) | Shows the current firmware version for your device and alerts if an update is available
 
 > ***Total cost is based on the energy provider and kWh cost set in Pod Point.**
@@ -155,12 +156,16 @@ Solo 3 Tethered | /api/pod_point/static/2c-03.png
 ```yaml
 type: entities
 entities:
-  - entity: binary_sensor.psl_xxxxxx_cable_status
-    name: Cable Status
   - entity: sensor.psl_xxxxxx_status
     name: Pod Status
+  - entity: sensor.psl_xxxxxx_charge_mode
+    name: Charge Mode
+  - entity: binary_sensor.psl_xxxxxx_cable_status
+    name: Cable Status
   - entity: switch.psl_xxxxxx_charging_allowed
     name: Charging Allowed
+  - entity: switch.psl_xxxxxx_smart_charge_mode
+    name: Smart Charge Mode
   - entity: sensor.psl_xxxxxx_current_energy
     name: Current Energy
   - entity: sensor.psl_xxxxxx_total_energy
