@@ -131,7 +131,7 @@ entities:
   - entity: sensor.psl_xxxxxx_charge_mode
     name: Charge Mode
   - entity: sensor.psl_xxxxxx_charge_override_end_time
-    name: Charge Mode
+    name: Charge Override Time Ends
   - entity: binary_sensor.psl_xxxxxx_cable_status
     name: Cable Status
   - entity: switch.psl_xxxxxx_charging_allowed
@@ -190,7 +190,7 @@ If you want to contribute to this please read the [Contribution guidelines](CONT
 [commits]: https://github.com/mattrayner/pod-point-home-assistant-component/commits/master
 [hacs]: https://github.com/custom-components/hacs
 [hacsbadge]: https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge
-[exampleimg]: https://github.com/mattrayner/pod-point-home-assistant-component/raw/ae52931c746b5d0b2d91a150b6140ad100e82a91/example.png
+[exampleimg]: https://github.com/mattrayner/pod-point-home-assistant-component/raw/48fdfe237f68c22d4098e8904926f534fdd49819/example.png
 [whichpodimg]: https://github.com/mattrayner/pod-point-home-assistant-component/raw/ef2c39788cdcd85d08a9adab1c06d74c51d38993/which_pod.png
 [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge
 [forum]: https://community.home-assistant.io/
