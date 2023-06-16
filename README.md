@@ -12,6 +12,9 @@
 
 _Unofficial component to integrate with [Pod Point][pod_point_web] Solo/Solo 3 charging points._
 
+> **NOTE:** PodPoint have made changes to their authentication system in June 2023 which may result in existing connections reporting Invalid Credentials, and users being unable to log in again with their existing password. 
+> This can be fixed by going to https://charge.pod-point.com/login and reseting your password, and then re-authenticate with the integration.
+
 **This component will set up the following platforms and services.**
 
 Platform | Description
