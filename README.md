@@ -1,5 +1,7 @@
 # Pod Point Home Assistant Component
 
+> **IMPORTANT** It appears that on the 30th January Pod Point updated their mobile apps. This change appears to have changed how/where the authentication and data from Pod Point is hosted. You may have issues connecting to Pod Point.
+
 [![GitHub Release][releases-shield]][releases]
 [![GitHub Activity][commits-shield]][commits]
 [![License][license-shield]](LICENSE)
