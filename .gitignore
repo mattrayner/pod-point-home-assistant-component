@@ -7,3 +7,8 @@ venv
 .idea
 htmlcov
 .DS_STORE
+
+config/blueprints
+config/deps
+config/.*
+config/home-assistant*

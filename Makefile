@@ -30,3 +30,6 @@ test:
 		-o console_output_style=count \
 		-p no:sugar \
 		tests
+
+develop:
+	scripts/develop
