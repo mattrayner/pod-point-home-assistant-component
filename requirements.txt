@@ -1,4 +1,4 @@
-podpointclient==1.4.1
+podpointclient==1.4.3
 StrEnum>=0.4<0.5
 aiodiscover==1.4.13
 scapy==2.5
