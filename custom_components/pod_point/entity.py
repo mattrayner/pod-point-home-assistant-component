@@ -25,6 +25,7 @@ from .const import (
     DOMAIN,
     NAME,
     ATTR_STATE_SUSPENDED_EV,
+    ATTR_STATE_SUSPENDED_EVSE,
     ATTR_STATE_IDLE,
     ATTR_STATE_PENDING,
 )
@@ -291,6 +292,7 @@ class PodPointEntity(CoordinatorEntity):
             CHARGING_FLAG,
             ATTR_STATE_CONNECTED_WAITING,
             ATTR_STATE_SUSPENDED_EV,
+            ATTR_STATE_SUSPENDED_EVSE,
         )
 
     @staticmethod
