@@ -1,4 +1,5 @@
 """Test pod_point sensors."""
+
 import asyncio
 import pytest
 import aiohttp
@@ -51,6 +52,7 @@ from .const import MOCK_CONFIG
 
 from unittest.mock import Mock
 
+
 async def setup_updates(hass) -> List[PodUpdateEntity]:
     """Setup updates within the test environment"""
     coordinator = await coordinator_with_data(hass)
@@ -70,6 +72,7 @@ async def setup_updates(hass) -> List[PodUpdateEntity]:
 
     return (config_entry, updates)
 
+
 @pytest.mark.asyncio
 async def test_update_sensor(hass, bypass_get_data):
     """Tests for pod updates sensor."""
@@ -77,9 +80,7 @@ async def test_update_sensor(hass, bypass_get_data):
 
     [update] = updates
 
-    assert (
-        "pod_point_12234_PSL-123456_update" == update.unique_id
-    )
+    assert "pod_point_12234_PSL-123456_update" == update.unique_id
 
     assert "A30P-3.1.22-00001" == update.installed_version
     assert "A30P-3.1.22-00001" == update.latest_version
@@ -87,4 +88,7 @@ async def test_update_sensor(hass, bypass_get_data):
 
     update.pod.firmware.update_status.is_update_available = True
     assert "A30P-3.1.22-00001_UPDATE_AVAILABLE" == update.latest_version
-    assert "A firmware update is available for PSL-123456.\n\nExternal updating is not supported by the PodPoint APIs, please check the PodPoint mobile app for next steps." == update.release_notes()
+    assert (
+        "A firmware update is available for PSL-123456.\n\nExternal updating is not supported by the PodPoint APIs, please check the PodPoint mobile app for next steps."
+        == update.release_notes()
+    )

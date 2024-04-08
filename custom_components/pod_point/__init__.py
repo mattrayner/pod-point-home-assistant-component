@@ -4,6 +4,7 @@ Custom integration to integrate pod_point with Home Assistant.
 For more details about this integration, please refer to
 https://github.com/mattrayner/pod-point-home-assistant-component
 """
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -77,6 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     coordinator = PodPointDataUpdateCoordinator(
         hass, client=client, scan_interval=scan_interval
     )
+
     # Check the credentials we have and ensure that we can perform a refresh
     await coordinator.async_config_entry_first_refresh()
 

@@ -1,4 +1,5 @@
 """PodPointEntity class"""
+
 from datetime import datetime, timedelta
 import logging
 from typing import Any, Dict, List
@@ -23,6 +24,9 @@ from .const import (
     CHARGING_FLAG,
     DOMAIN,
     NAME,
+    ATTR_STATE_SUSPENDED_EV,
+    ATTR_STATE_IDLE,
+    ATTR_STATE_PENDING,
 )
 from .coordinator import PodPointDataUpdateCoordinator
 
@@ -56,7 +60,7 @@ class PodPointEntity(CoordinatorEntity):
             "total_kwh": pod.total_kwh,
             "total_charge_seconds": pod.total_charge_seconds,
             "current_kwh": pod.current_kwh,
-            "charge_mode": pod.charge_mode
+            "charge_mode": pod.charge_mode,
         }
 
         attrs.update(pod.dict)
@@ -65,7 +69,9 @@ class PodPointEntity(CoordinatorEntity):
         for status in pod.statuses:
             state = self.compare_state(state, status.key_name)
 
-        is_available_state = state == ATTR_STATE_AVAILABLE
+        is_available_state = (state == ATTR_STATE_AVAILABLE) or (
+            state == ATTR_STATE_IDLE
+        )
         is_charging_state = state == ATTR_STATE_CHARGING
         is_override_charge_mode = pod.charge_mode == ChargeMode.OVERRIDE
         is_manual_charge_mode = pod.charge_mode == ChargeMode.MANUAL
@@ -73,12 +79,15 @@ class PodPointEntity(CoordinatorEntity):
         should_be_waiting_state = is_available_state and charging_not_allowed
         should_be_connected_waiting_state = is_charging_state and charging_not_allowed
         should_be_available = is_available_state and (
-            is_override_charge_mode
-            or is_manual_charge_mode
+            is_override_charge_mode or is_manual_charge_mode
         )
         should_be_charging = is_charging_state and (
-            is_override_charge_mode
-            or is_manual_charge_mode
+            is_override_charge_mode or is_manual_charge_mode
+        )
+        should_be_pending = (
+            self.coordinator.last_message_at is not None
+            and self.pod.last_message_at is not None
+            and self.coordinator.last_message_at > self.pod.last_message_at
         )
 
         if should_be_waiting_state:
@@ -94,6 +103,10 @@ class PodPointEntity(CoordinatorEntity):
         # Pod should be charging if pod is charging and state is overriden, or manual charge mode
         if should_be_charging:
             state = ATTR_STATE_CHARGING
+
+        # Should this pod be pending?
+        if should_be_pending:
+            state = ATTR_STATE_PENDING
 
         attrs[ATTR_STATE] = state
 
@@ -274,32 +287,40 @@ class PodPointEntity(CoordinatorEntity):
     def connected(self) -> bool:
         """Returns true if pod is connected to a vehicle"""
         status = self.extra_state_attributes.get(ATTR_STATE, "")
-        return status in (CHARGING_FLAG, ATTR_STATE_CONNECTED_WAITING)
+        return status in (
+            CHARGING_FLAG,
+            ATTR_STATE_CONNECTED_WAITING,
+            ATTR_STATE_SUSPENDED_EV,
+        )
 
     @staticmethod
     def compare_state(state, pod_state) -> str:
         """Given two states, which one is most important"""
         ranking = ATTR_STATE_RANKING
 
-        # If pod state is None, but state is set, return the state
-        if pod_state is None and state is not None:
-            return state
+        state_sanitized = state.lower().replace("_", "-") if state is not None else None
+        pod_state_sanitized = (
+            pod_state.lower().replace("_", "-") if pod_state is not None else None
+        )
 
-        if state is None and pod_state is not None:
-            return pod_state
+        # If pod state is None, but state is set, return the state
+        if pod_state_sanitized is None and state_sanitized is not None:
+            return state_sanitized
+
+        if state_sanitized is None and pod_state_sanitized is not None:
+            return pod_state_sanitized
 
         try:
-            state_rank = ranking.index(state)
+            state_rank = ranking.index(state_sanitized)
         except ValueError:
             state_rank = 100
 
         try:
-            pod_rank = ranking.index(pod_state)
+            pod_rank = ranking.index(pod_state_sanitized)
         except ValueError:
             pod_rank = 100
 
-        winner = state if state_rank >= pod_rank else pod_state
-
+        winner = state_sanitized if state_rank >= pod_rank else pod_state_sanitized
         return winner
 
     def __pod_image(self, model: str) -> str:
@@ -342,7 +363,7 @@ class PodPointEntity(CoordinatorEntity):
             if seconds > period_seconds:
                 period_value, seconds = divmod(seconds, period_seconds)
                 has_s = "s" if period_value > 1 else ""
-                strings.append(f'{period_value} {period_name}{has_s}')
+                strings.append(f"{period_value} {period_name}{has_s}")
 
         output = "0s"
         if len(strings) > 0:
