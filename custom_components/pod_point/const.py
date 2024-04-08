@@ -1,4 +1,5 @@
 """Constants for pod_point."""
+
 from podpointclient.version import __version__ as pod_point_client_version
 
 from .version import __version__ as integration_version
@@ -28,6 +29,7 @@ PLATFORMS = [BINARY_SENSOR, SENSOR, SWITCH, UPDATE]
 ENERGY = "energy"
 
 SERVICE_CHARGE_NOW = "charge_now"
+SERVICE_STOP_CHARGE_NOW = "stop_charge_now"
 
 # Configuration and options
 CONF_ENABLED = "enabled"
@@ -85,6 +87,10 @@ ATTR_IMAGE = "local_image"
 ATTR_STATE_AVAILABLE = "available"
 ATTR_STATE_UNAVAILABLE = "unavailable"
 ATTR_STATE_CHARGING = "charging"
+ATTR_STATE_IDLE = "idle"
+ATTR_STATE_SUSPENDED_EV = "suspended-ev"
+ATTR_STATE_SUSPENDED_EVSE = "suspended-evse"
+ATTR_STATE_PENDING = "pending"
 ATTR_STATE_OUT_OF_SERVICE = "out-of-service"
 ATTR_STATE_WAITING = "waiting-for-schedule"
 ATTR_STATE_CONNECTED_WAITING = "connected-waiting-for-schedule"
@@ -92,9 +98,13 @@ ATTR_STATE_CHARGE_OVERRIED = "charge-override"
 ATTR_STATE_RANKING = [
     ATTR_STATE_AVAILABLE,
     ATTR_STATE_UNAVAILABLE,
+    ATTR_STATE_IDLE,
     ATTR_STATE_CHARGING,
+    ATTR_STATE_SUSPENDED_EV,
     ATTR_STATE_OUT_OF_SERVICE,
+    ATTR_STATE_SUSPENDED_EVSE,
 ]
+ATTR_CONNECTION_STATE_ONLINE = "ONLINE"
 
 ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 ATTR_HOURS = "hours"

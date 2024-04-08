@@ -1,4 +1,5 @@
 """Data fixtures used within tests."""
+
 POD_MINIMAL_FIXTURE = {
     "id": 12234,
     "name": None,
@@ -537,12 +538,8 @@ FIRMWARE_COMPLETE_FIXTURE = {
     "data": [
         {
             "serial_number": "123456789",
-            "version_info": {
-                "manifest_id": "A30P-3.1.22-00001"
-            },
-            "update_status": {
-                "is_update_available": False
-            }
+            "version_info": {"manifest_id": "A30P-3.1.22-00001"},
+            "update_status": {"is_update_available": False},
         }
     ]
 }
@@ -556,11 +553,7 @@ USER_COMPLETE_FIXTURE = {
         "role": "user",
         "hasHomeCharge": 1,
         "locale": "en",
-        "preferences": [
-            {
-                "unitOfDistance": "mi"
-            }
-        ],
+        "preferences": [{"unitOfDistance": "mi"}],
         "account": {
             "user_id": 123456,
             "uid": "1a756c9b-dfac-4c2a-ba13-9cdcc2399366",
@@ -572,10 +565,10 @@ USER_COMPLETE_FIXTURE = {
                 "address2": "",
                 "town": "",
                 "postcode": "",
-                "country": ""
+                "country": "",
             },
             "phone": "",
-            "mobile": None
+            "mobile": None,
         },
         "vehicle": {
             "id": 129,
@@ -588,7 +581,7 @@ USER_COMPLETE_FIXTURE = {
             "image": {
                 "@1x": "https://pod-point-admin-images-prod.imgix.net/vehicle-model-images/8eb13aeaf566eaedbe648bab8a5c14c0.png?w=0.5&h=0.5",
                 "@2x": "https://pod-point-admin-images-prod.imgix.net/vehicle-model-images/8eb13aeaf566eaedbe648bab8a5c14c0.png?w=0.75&h=0.75",
-                "@3x": "https://pod-point-admin-images-prod.imgix.net/vehicle-model-images/8eb13aeaf566eaedbe648bab8a5c14c0.png"
+                "@3x": "https://pod-point-admin-images-prod.imgix.net/vehicle-model-images/8eb13aeaf566eaedbe648bab8a5c14c0.png",
             },
             "make": {
                 "id": 22,
@@ -596,9 +589,9 @@ USER_COMPLETE_FIXTURE = {
                 "logo": {
                     "@1x": "https://pod-point-admin-images-prod.imgix.net/vehicle-make-logos/315261a80a1287b6d1b70f5c0fa8ccde.png?w=0.5&h=0.5",
                     "@2x": "https://pod-point-admin-images-prod.imgix.net/vehicle-make-logos/315261a80a1287b6d1b70f5c0fa8ccde.png?w=0.75&h=0.75",
-                    "@3x": "https://pod-point-admin-images-prod.imgix.net/vehicle-make-logos/315261a80a1287b6d1b70f5c0fa8ccde.png"
-                }
-            }
+                    "@3x": "https://pod-point-admin-images-prod.imgix.net/vehicle-make-logos/315261a80a1287b6d1b70f5c0fa8ccde.png",
+                },
+            },
         },
         "unit": {
             "id": 123456,
@@ -614,10 +607,7 @@ USER_COMPLETE_FIXTURE = {
                 "home": True,
                 "public": False,
                 "evZone": False,
-                "location": {
-                    "lat": 23.543643,
-                    "lng": 7.2434543
-                },
+                "location": {"lat": 23.543643, "lng": 7.2434543},
                 "address_id": 12345,
                 "description": "",
                 "commissioned_at": "2022-01-25T09:00:00+00:00",
@@ -633,7 +623,7 @@ USER_COMPLETE_FIXTURE = {
                     "supports_payg": False,
                     "supports_ocpp": False,
                     "supports_contactless": False,
-                    "image_url": None
+                    "image_url": None,
                 },
                 "statuses": [
                     {
@@ -642,7 +632,7 @@ USER_COMPLETE_FIXTURE = {
                         "key_name": "available",
                         "label": "Available",
                         "door": "A",
-                        "door_id": 1
+                        "door_id": 1,
                     }
                 ],
                 "unit_connectors": [
@@ -660,8 +650,8 @@ USER_COMPLETE_FIXTURE = {
                                 "type": "IEC 62196-2 Type 2",
                                 "description": "Type 2 socket",
                                 "ocpp_name": "sType2",
-                                "ocpp_code": 3
-                            }
+                                "ocpp_code": 3,
+                            },
                         }
                     }
                 ],
@@ -672,9 +662,7 @@ USER_COMPLETE_FIXTURE = {
                         "start_time": "00:00:00",
                         "end_day": 1,
                         "end_time": "00:00:01",
-                        "status": {
-                            "is_active": False
-                        }
+                        "status": {"is_active": False},
                     },
                     {
                         "uid": "bf3188eb-745e-4fbd-baa9-8a141eb708ed",
@@ -682,9 +670,7 @@ USER_COMPLETE_FIXTURE = {
                         "start_time": "00:00:00",
                         "end_day": 2,
                         "end_time": "00:00:01",
-                        "status": {
-                            "is_active": False
-                        }
+                        "status": {"is_active": False},
                     },
                     {
                         "uid": "80eeba4b-2e69-4e04-a1e9-6e7dfc88528e",
@@ -692,9 +678,7 @@ USER_COMPLETE_FIXTURE = {
                         "start_time": "00:00:00",
                         "end_day": 3,
                         "end_time": "00:00:01",
-                        "status": {
-                            "is_active": False
-                        }
+                        "status": {"is_active": False},
                     },
                     {
                         "uid": "3fddde7d-0809-43b3-8d16-64faf8a84e97",
@@ -702,9 +686,7 @@ USER_COMPLETE_FIXTURE = {
                         "start_time": "00:00:00",
                         "end_day": 4,
                         "end_time": "00:00:01",
-                        "status": {
-                            "is_active": False
-                        }
+                        "status": {"is_active": False},
                     },
                     {
                         "uid": "79e69a06-2c3a-442b-a65f-5766140d8874",
@@ -712,9 +694,7 @@ USER_COMPLETE_FIXTURE = {
                         "start_time": "00:00:00",
                         "end_day": 5,
                         "end_time": "00:00:01",
-                        "status": {
-                            "is_active": False
-                        }
+                        "status": {"is_active": False},
                     },
                     {
                         "uid": "0d2e6fdc-2a3d-4808-84e1-22e1d9d10be8",
@@ -722,9 +702,7 @@ USER_COMPLETE_FIXTURE = {
                         "start_time": "00:00:00",
                         "end_day": 6,
                         "end_time": "00:00:01",
-                        "status": {
-                            "is_active": False
-                        }
+                        "status": {"is_active": False},
                     },
                     {
                         "uid": "f79028be-00e9-4a86-a6c4-d474b7aaab37",
@@ -732,12 +710,37 @@ USER_COMPLETE_FIXTURE = {
                         "start_time": "00:00:00",
                         "end_day": 7,
                         "end_time": "00:00:01",
-                        "status": {
-                            "is_active": False
-                        }
-                    }
-                ]
-            }
-        }
+                        "status": {"is_active": False},
+                    },
+                ],
+            },
+        },
     }
+}
+
+CONNECTIVITY_STATUS_COMPLETE_FIXTURE = {
+    "ppid": "PSL-123456",
+    "evses": [
+        {
+            "id": 1,
+            "connectivityState": {
+                "protocol": "POW",
+                "connectivityStatus": "ONLINE",
+                "signalStrength": -68,
+                "lastMessageAt": "2024-04-05T18:26:28Z",
+                "connectionStartedAt": "2024-04-05T18:26:26.819Z",
+                "connectionQuality": 3,
+            },
+            "connectors": [{"id": 1, "door": "A", "chargingState": "SUSPENDED_EV"}],
+            "architecture": "arch3",
+            "energyOfferStatus": {
+                "isOfferingEnergy": True,
+                "reason": "CHARGE_SCHEDULE",
+                "until": None,
+                "randomDelay": None,
+                "doNotCache": False,
+            },
+        }
+    ],
+    "connectedComponents": ["evses"],
 }

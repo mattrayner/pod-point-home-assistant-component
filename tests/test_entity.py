@@ -1,4 +1,5 @@
 """Test pod_point switch."""
+
 # import asyncio
 from datetime import datetime
 from email.utils import encode_rfc2231
@@ -204,8 +205,17 @@ async def test_pod_point_entity(hass, bypass_get_data):
         ],
         "unit_id": 123456,
         "total_cost": 0,
-        'firmware': {'serial_number': '123456789', 'update_status': {'is_update_available': False}, 'version_info': {'manifest_id': 'A30P-3.1.22-00001'}},
-        'charge_mode': ChargeMode.SMART, 'charge_override': None
+        "firmware": {
+            "serial_number": "123456789",
+            "update_status": {"is_update_available": False},
+            "version_info": {"manifest_id": "A30P-3.1.22-00001"},
+        },
+        "charge_mode": ChargeMode.SMART,
+        "charge_override": None,
+        "charging_state": "Unknown",
+        "connectivity_status": None,
+        "last_message_at": None,
+        "offering_energy": False,
     } == entity.extra_state_attributes
 
     assert True is entity.charging_allowed

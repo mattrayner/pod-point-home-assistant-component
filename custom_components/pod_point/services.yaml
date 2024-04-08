@@ -38,3 +38,17 @@ charge_now:
         number:
           min: 0
           max: 59
+
+stop_charge_now:
+    name: Stop Pod Point Pod 'Charge Now'
+    description: >-
+        Ends a pod's 'Charge Now' mode. Please allow 5 minutes for mode to change on the pod.
+
+    fields:
+      config_entry_id:
+        name: Pod Point Account
+        description: The account we will be stopping a charge_now value for.
+        required: true
+        selector:
+          config_entry:
+            integration: pod_point

@@ -29,6 +29,9 @@ Platform | Description
 `sensor` (Balance) | Shows the balance on your PodPoint account.
 `sensor` (Charge Mode) | Shows the charge mode your pod is currently in/
 `sensor` (***Charge Override End Time) | Shows the end time for any configured 'charge now' override.
+`sensor` (Signal Strength) | Shows WiFi signal strength of a given pod.
+`sensor` (Last message received) | When was a message last received from a given pod.
+`sensor` (Cloud connection status) | Status of pods connection to the cloud.
 `switch` (****Allow Charging) | Enable/disable charging by enabling/disabling a schedule.
 `switch` (Smart Charge Mode) | Enable the switch for 'Smart' charge mode, disable it for 'Manual' charge mode.
 `update` (Firmware Update) | Shows the current firmware version for your device and alerts if an update is available

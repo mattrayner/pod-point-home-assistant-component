@@ -1,4 +1,5 @@
-"""Support for EZVIZ sensors."""
+"""Support for Pod Point sensors."""
+
 from __future__ import annotations
 
 from homeassistant.components.update import (
@@ -88,9 +89,9 @@ class PodUpdateEntity(PodPointEntity, UpdateEntity):
     def release_notes(self) -> str | None:
         """Return full release notes."""
         return (
-            f"A firmware update is available for {self.pod.ppid}."\
-                "\n\nExternal updating is not supported by the PodPoint APIs,"\
-                " please check the PodPoint mobile app for next steps."
+            f"A firmware update is available for {self.pod.ppid}."
+            "\n\nExternal updating is not supported by the PodPoint APIs,"
+            " please check the PodPoint mobile app for next steps."
             if self.pod.firmware.update_available
             else f"{self.pod.ppid} is up to date!"
         )

@@ -1,6 +1,8 @@
 """Switch platform for pod_point."""
+
 import logging
 
+import pytz
 from homeassistant.components.switch import SwitchEntity
 from podpointclient.charge_mode import ChargeMode
 from podpointclient.client import PodPointClient
@@ -8,6 +10,7 @@ from podpointclient.client import PodPointClient
 from .const import DOMAIN, SWITCH_ICON
 from .coordinator import PodPointDataUpdateCoordinator
 from .entity import PodPointEntity
+from datetime import datetime
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -42,6 +45,7 @@ class PodPointChargingAllowedSwitch(PodPointEntity, SwitchEntity):
         api: PodPointClient = self.coordinator.api
         await api.async_set_schedule(enabled=False, pod=self.pod)
 
+        self.coordinator.last_message_at = datetime.now(pytz.UTC)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):  # pylint: disable=unused-argument
@@ -54,6 +58,7 @@ class PodPointChargingAllowedSwitch(PodPointEntity, SwitchEntity):
 
         await api.async_set_schedule(enabled=True, pod=self.pod)
 
+        self.coordinator.last_message_at = datetime.now(pytz.UTC)
         await self.coordinator.async_request_refresh()
 
     @property
@@ -74,8 +79,7 @@ class PodPointChargingAllowedSwitch(PodPointEntity, SwitchEntity):
 
     def _override_to_on(self):
         return self.pod.charge_mode == ChargeMode.MANUAL or (
-            self.pod.charge_override is not None
-            and self.pod.charge_override.active
+            self.pod.charge_override is not None and self.pod.charge_override.active
         )
 
 
@@ -91,6 +95,7 @@ class PodPointChargeModeSwitch(PodPointEntity, SwitchEntity):
         api: PodPointClient = self.coordinator.api
         await api.async_set_charge_mode_smart(self.pod)
 
+        self.coordinator.last_message_at = datetime.now(pytz.UTC)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):  # pylint: disable=unused-argument
@@ -98,6 +103,7 @@ class PodPointChargeModeSwitch(PodPointEntity, SwitchEntity):
         api: PodPointClient = self.coordinator.api
         await api.async_set_charge_mode_manual(self.pod)
 
+        self.coordinator.last_message_at = datetime.now(pytz.UTC)
         await self.coordinator.async_request_refresh()
 
     @property
@@ -106,4 +112,7 @@ class PodPointChargeModeSwitch(PodPointEntity, SwitchEntity):
 
     @property
     def is_on(self):
-        return self.pod.charge_mode == ChargeMode.SMART or self.pod.charge_mode == ChargeMode.OVERRIDE
+        return (
+            self.pod.charge_mode == ChargeMode.SMART
+            or self.pod.charge_mode == ChargeMode.OVERRIDE
+        )

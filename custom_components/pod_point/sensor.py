@@ -1,4 +1,5 @@
 """Sensor platform for pod_point."""
+
 from datetime import datetime, timedelta, timezone
 import logging
 from typing import Any, Dict
@@ -9,11 +10,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfEnergy, UnitOfTime
+from homeassistant.const import UnitOfEnergy, UnitOfTime, SIGNAL_STRENGTH_DECIBELS
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from podpointclient.charge_mode import ChargeMode
 from podpointclient.charge_override import ChargeOverride
+from podpointclient.connectivity_status import Evse
 from podpointclient.pod import Pod
 from podpointclient.user import User
 
@@ -23,6 +26,10 @@ from .const import (
     ATTR_STATE_CHARGING,
     ATTR_STATE_CONNECTED_WAITING,
     ATTR_STATE_OUT_OF_SERVICE,
+    ATTR_STATE_SUSPENDED_EV,
+    ATTR_STATE_SUSPENDED_EVSE,
+    ATTR_STATE_IDLE,
+    ATTR_STATE_PENDING,
     ATTR_STATE_UNAVAILABLE,
     ATTR_STATE_WAITING,
     ATTRIBUTION,
@@ -53,6 +60,8 @@ async def async_setup_entry(hass, entry, async_add_devices):
         ppcts = PodPointChargeTimeSensor(coordinator, entry, i)
         pptes = PodPointTotalEnergySensor(coordinator, entry, i)
         ppces = PodPointCurrentEnergySensor(coordinator, entry, i)
+        ppsss = PodPointSignalStrengthSensor(coordinator, entry, i)
+        pplmrs = PodPointLastMessageReceivedSensor(coordinator, entry, i)
         pptcs = PodPointTotalCostSensor(coordinator, entry, i)
         pplcccs = PodPointLastCompleteChargeCostSensor(coordinator, entry, i)
         charge_mode = PodPointChargeModeEntity(coordinator, entry, i)
@@ -63,6 +72,8 @@ async def async_setup_entry(hass, entry, async_add_devices):
         sensors.append(ppcts)
         sensors.append(pptes)
         sensors.append(ppces)
+        sensors.append(ppsss)
+        sensors.append(pplmrs)
         sensors.append(pptcs)
         sensors.append(pplcccs)
         sensors.append(charge_mode)
@@ -86,6 +97,10 @@ class PodPointSensor(
         ATTR_STATE_OUT_OF_SERVICE,
         ATTR_STATE_WAITING,
         ATTR_STATE_CONNECTED_WAITING,
+        ATTR_STATE_SUSPENDED_EV,
+        ATTR_STATE_SUSPENDED_EVSE,
+        ATTR_STATE_IDLE,
+        ATTR_STATE_PENDING,
     ]
     _attr_translation_key = "status"
     _attr_has_entity_name = True
@@ -152,6 +167,174 @@ class PodPointChargeTimeSensor(
     def native_value(self):
         """Return the native value of the sensor."""
         return self.extra_state_attributes["raw"]
+
+    @property
+    def entity_picture(self) -> str:
+        return None
+
+
+class PodPointSignalStrengthSensor(
+    PodPointEntity,
+    SensorEntity,
+):
+    """pod_point Signal Strength sensor class."""
+
+    _attr_translation_key = "signal_strength"
+    _attr_has_entity_name = True
+    _attr_name = "Signal Strength"
+    _attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator, config_entry: ConfigEntry, idx: int):
+        super().__init__(coordinator, config_entry=config_entry, idx=idx)
+        self.__update_attrs()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.__update_attrs()
+        self.async_write_ha_state()
+
+    def __update_attrs(self):
+        signal_strength = self.__signal_strength()
+        connection_quality = self.__connection_quality()
+
+        attrs = {
+            "attribution": ATTRIBUTION,
+            "integration": DOMAIN,
+            "signal_strength": signal_strength,
+            "connection_quality": connection_quality,
+        }
+
+        self.extra_attrs = attrs
+
+    @property
+    def unique_id(self):
+        return f"{super().unique_id}_signal_strength"
+
+    @property
+    def extra_state_attributes(self) -> Dict[str, Any]:
+        return self.extra_attrs
+
+    @property
+    def native_value(self):
+        """Return the native value of the sensor."""
+        return self.extra_state_attributes["signal_strength"]
+
+    @property
+    def native_unit_of_measurement(self):
+        return SIGNAL_STRENGTH_DECIBELS
+
+    @property
+    def icon(self):
+        """Return the icon of the sensor."""
+        icon = "mdi:wifi-strength-1"
+
+        connection_quality = self.__connection_quality()
+
+        if 0 < connection_quality <= 4:
+            icon = f"mdi:wifi-strength-{connection_quality}"
+
+        return icon
+
+    @property
+    def entity_picture(self) -> str:
+        return None
+
+    def __signal_strength(self) -> int:
+        has_connectivity_status = self.pod.connectivity_status is not None
+        has_evse = (
+            has_connectivity_status
+            and self.pod.connectivity_status.evses[0] is not None
+        )
+        has_connectivity_state = (
+            has_evse
+            and self.pod.connectivity_status.evses[0].connectivity_state is not None
+        )
+        has_signal_strength = (
+            has_connectivity_state
+            and self.pod.connectivity_status.evses[0].connectivity_state.signal_strength
+            is not None
+        )
+
+        return (
+            self.pod.connectivity_status.evses[0].connectivity_state.signal_strength
+            if has_signal_strength
+            else 0
+        )
+
+    def __connection_quality(self) -> int:
+        has_connectivity_status = self.pod.connectivity_status is not None
+        has_evse = (
+            has_connectivity_status
+            and self.pod.connectivity_status.evses[0] is not None
+        )
+        has_connectivity_state = (
+            has_evse
+            and self.pod.connectivity_status.evses[0].connectivity_state is not None
+        )
+        has_connection_quality = (
+            has_connectivity_state
+            and self.pod.connectivity_status.evses[
+                0
+            ].connectivity_state.connection_quality
+            is not None
+        )
+
+        return (
+            self.pod.connectivity_status.evses[0].connectivity_state.connection_quality
+            if has_connection_quality
+            else 0
+        )
+
+
+class PodPointLastMessageReceivedSensor(
+    PodPointEntity,
+    SensorEntity,
+):
+    """pod_point Last Message Received sensor class."""
+
+    _attr_translation_key = "last_message_received"
+    _attr_has_entity_name = True
+    _attr_name = "Last Message Received"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator, config_entry: ConfigEntry, idx: int):
+        super().__init__(coordinator, config_entry=config_entry, idx=idx)
+        self.__update_attrs()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.__update_attrs()
+        self.async_write_ha_state()
+
+    def __update_attrs(self):
+        attrs = {
+            "attribution": ATTRIBUTION,
+            "integration": DOMAIN,
+            "last_message_received": self.pod.last_message_at,
+        }
+
+        self.extra_attrs = attrs
+
+    @property
+    def unique_id(self):
+        return f"{super().unique_id}_last_message_at"
+
+    @property
+    def extra_state_attributes(self) -> Dict[str, Any]:
+        return self.extra_attrs
+
+    @property
+    def native_value(self):
+        """Return the native value of the sensor."""
+        return self.extra_state_attributes["last_message_received"]
+
+    @property
+    def icon(self):
+        return "mdi:message-text-clock"
 
     @property
     def entity_picture(self) -> str:
@@ -272,11 +455,7 @@ class PodPointChargeModeEntity(
 ):
     """pod_point charge mode sensor class."""
 
-    _attr_options = [
-        ChargeMode.MANUAL,
-        ChargeMode.SMART,
-        ChargeMode.OVERRIDE
-    ]
+    _attr_options = [ChargeMode.MANUAL, ChargeMode.SMART, ChargeMode.OVERRIDE]
     _attr_has_entity_name = True
     _attr_name = "Charge Mode"
     _attr_device_class = SensorDeviceClass.ENUM
@@ -292,9 +471,7 @@ class PodPointChargeModeEntity(
         if self.pod.charge_override is not None:
             charge_override = self.pod.charge_override.dict
 
-        return {
-            "charge_override": charge_override
-        }
+        return {"charge_override": charge_override}
 
     @property
     def native_value(self):
@@ -327,9 +504,7 @@ class PodPointChargeOverrideEntity(
         if self.pod.charge_override is not None:
             charge_override = self.pod.charge_override.dict
 
-        return {
-            "charge_override": charge_override
-        }
+        return {"charge_override": charge_override}
 
     @property
     def native_value(self):
