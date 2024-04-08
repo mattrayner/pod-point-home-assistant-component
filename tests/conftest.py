@@ -1,4 +1,5 @@
 """Global fixtures for pod_point integration."""
+
 # Fixtures allow you to replace functions with a Mock object. You can perform
 # many options via the Mock to reflect a particular behavior from the original
 # function that you want to see without going through the function's actual logic.
@@ -16,9 +17,21 @@
 # pytest includes fixtures OOB which you can use as defined on this page)
 from unittest.mock import patch
 
-from .fixtures import CHARGES_COMPLETE_FIXTURE, POD_COMPLETE_FIXTURE, FIRMWARE_COMPLETE_FIXTURE, USER_COMPLETE_FIXTURE
+from .fixtures import (
+    CHARGES_COMPLETE_FIXTURE,
+    POD_COMPLETE_FIXTURE,
+    FIRMWARE_COMPLETE_FIXTURE,
+    USER_COMPLETE_FIXTURE,
+    CONNECTIVITY_STATUS_COMPLETE_FIXTURE,
+)
 
-from podpointclient.factories import PodFactory, ChargeFactory, FirmwareFactory, UserFactory
+from podpointclient.factories import (
+    PodFactory,
+    ChargeFactory,
+    FirmwareFactory,
+    UserFactory,
+    ConnectivityStatusFactory,
+)
 from podpointclient.errors import AuthError
 
 import pytest
@@ -60,6 +73,12 @@ def bypass_get_data_fixture():
     firmware = firmware_factory.build_firmwares(FIRMWARE_COMPLETE_FIXTURE)
     user_factory = UserFactory()
     user = user_factory.build_user(USER_COMPLETE_FIXTURE)
+    connectivity_status_factory = ConnectivityStatusFactory()
+    connectivity_status = connectivity_status_factory.build_connectivity_status(
+        CONNECTIVITY_STATUS_COMPLETE_FIXTURE
+    )
+
+    print(connectivity_status)
 
     with patch(
         "podpointclient.client.PodPointClient.async_get_all_pods", return_value=pods
@@ -79,6 +98,9 @@ def bypass_get_data_fixture():
     ), patch(
         "podpointclient.client.PodPointClient.async_get_user",
         return_value=user,
+    ), patch(
+        "podpointclient.client.PodPointClient.async_get_connectivity_status",
+        return_value=connectivity_status,
     ):
         yield
 

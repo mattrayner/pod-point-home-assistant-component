@@ -1,4 +1,5 @@
 """Test pod_point config flow."""
+
 from types import MappingProxyType
 from unittest.mock import patch
 
@@ -24,10 +25,10 @@ from custom_components.pod_point.const import (
 from .const import MOCK_CONFIG
 
 DHCP_SERVICE_INFO = dhcp.DhcpServiceInfo(
-     hostname="podpoint-245EBE000000",
-     ip="192.168.1.200",
-     macaddress="245EBE000000",
- )
+    hostname="podpoint-245EBE000000",
+    ip="192.168.1.200",
+    macaddress="245EBE000000",
+)
 
 
 # This fixture bypasses the actual setup of the integration
@@ -36,7 +37,10 @@ DHCP_SERVICE_INFO = dhcp.DhcpServiceInfo(
 @pytest.fixture(autouse=True)
 def bypass_setup_fixture():
     """Prevent setup."""
-    with patch("custom_components.pod_point.async_setup", return_value=True,), patch(
+    with patch(
+        "custom_components.pod_point.async_setup",
+        return_value=True,
+    ), patch(
         "custom_components.pod_point.async_setup_entry",
         return_value=True,
     ):
@@ -182,9 +186,9 @@ async def test_options_flow(hass, bypass_get_data):
 async def test_dhcp_flow(hass: HomeAssistant, bypass_get_data) -> None:
     """Test that DHCP discovery works."""
     result = await hass.config_entries.flow.async_init(
-       DOMAIN,
-       data=DHCP_SERVICE_INFO,
-       context={"source": config_entries.SOURCE_DHCP},
+        DOMAIN,
+        data=DHCP_SERVICE_INFO,
+        context={"source": config_entries.SOURCE_DHCP},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -195,6 +199,7 @@ async def test_dhcp_flow(hass: HomeAssistant, bypass_get_data) -> None:
 
     assert result2["type"] == "create_entry"
     assert result2["data"] == MOCK_CONFIG
+
 
 @pytest.mark.asyncio
 async def test_dhcp_login_error(hass: HomeAssistant, bypass_get_data) -> None:
@@ -214,4 +219,4 @@ async def test_dhcp_login_error(hass: HomeAssistant, bypass_get_data) -> None:
             result["flow_id"],
             MOCK_CONFIG,
         )
-        assert result["errors"] == {'base': "auth"}
+        assert result["errors"] == {"base": "auth"}

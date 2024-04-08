@@ -1,4 +1,5 @@
 """Adds config flow for Pod Point."""
+
 import logging
 from typing import Dict
 

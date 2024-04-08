@@ -1,4 +1,5 @@
 """Test pod_point services."""
+
 from unittest.mock import patch
 
 from podpointclient.pod import Pod
@@ -23,7 +24,9 @@ async def test_charge_now_service_with_data(hass, bypass_get_data):
 
     # Functions/objects can be patched directly in test code as well and can be used to test
     # additional things, like whether a function was called or what arguments it was called with
-    with patch("podpointclient.client.PodPointClient.async_set_charge_override") as title_func:
+    with patch(
+        "podpointclient.client.PodPointClient.async_set_charge_override"
+    ) as title_func:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_CHARGE_NOW,
@@ -74,8 +77,6 @@ async def test_charge_now_service_with_data(hass, bypass_get_data):
             await hass.services.async_call(
                 DOMAIN,
                 SERVICE_CHARGE_NOW,
-                {
-                    "config_entry_id": "test"
-                },
+                {"config_entry_id": "test"},
                 blocking=True,
             )

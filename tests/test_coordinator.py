@@ -1,8 +1,10 @@
 """Test pod_point setup process."""
+
 # from unittest import mock
 from email.headerregistry import ContentTransferEncodingHeader
 from unittest.mock import MagicMock
 from homeassistant.exceptions import ConfigEntryNotReady
+from datetime import timedelta
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -21,7 +23,11 @@ from podpointclient.errors import AuthError, ApiConnectionError, SessionError
 from podpointclient.factories import FirmwareFactory, UserFactory, PodFactory
 
 from .const import MOCK_CONFIG
-from .fixtures import POD_COMPLETE_FIXTURE, FIRMWARE_COMPLETE_FIXTURE, USER_COMPLETE_FIXTURE
+from .fixtures import (
+    POD_COMPLETE_FIXTURE,
+    FIRMWARE_COMPLETE_FIXTURE,
+    USER_COMPLETE_FIXTURE,
+)
 
 
 async def subject(hass) -> PodPointDataUpdateCoordinator:
@@ -32,7 +38,9 @@ async def subject(hass) -> PodPointDataUpdateCoordinator:
     )
 
     # Setup our data coordinator with the desired scan interval
-    return PodPointDataUpdateCoordinator(hass, client=client, scan_interval=300)
+    return PodPointDataUpdateCoordinator(
+        hass, client=client, scan_interval=timedelta(seconds=3000)
+    )
 
 
 async def subject_with_data(hass) -> PodPointDataUpdateCoordinator:
@@ -97,7 +105,9 @@ async def test_coordinator_refresh_connection_error(hass, error_on_get_data):
     )
 
     # Setup our data coordinator with the desired scan interval
-    coordinator = PodPointDataUpdateCoordinator(hass, client=client, scan_interval=300)
+    coordinator = PodPointDataUpdateCoordinator(
+        hass, client=client, scan_interval=timedelta(seconds=300)
+    )
 
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
@@ -119,7 +129,9 @@ async def test_coordinator_refresh_auth_session_error(hass, error_on_get_data):
     client.async_get_pods = MagicMock(side_effect=AuthError(401, "AUTH_ERROR_MESSAGE"))
 
     # Setup our data coordinator with the desired scan interval
-    coordinator = PodPointDataUpdateCoordinator(hass, client=client, scan_interval=300)
+    coordinator = PodPointDataUpdateCoordinator(
+        hass, client=client, scan_interval=timedelta(seconds=300)
+    )
 
     with pytest.raises(ConfigEntryAuthFailed):
         await coordinator._async_update_data()
@@ -129,7 +141,9 @@ async def test_coordinator_refresh_auth_session_error(hass, error_on_get_data):
     )
 
     # Setup our data coordinator with the desired scan interval
-    coordinator = PodPointDataUpdateCoordinator(hass, client=client, scan_interval=300)
+    coordinator = PodPointDataUpdateCoordinator(
+        hass, client=client, scan_interval=timedelta(seconds=300)
+    )
 
     with pytest.raises(ConfigEntryAuthFailed):
         await coordinator._async_update_data()
@@ -149,9 +163,12 @@ async def test_coordinator_refresh_unexpected_exception(hass, error_on_get_data)
     client.async_get_pods = MagicMock(side_effect=KeyError("CONNECTION_ERROR_MESSAGE"))
 
     # Setup our data coordinator with the desired scan interval
-    coordinator = PodPointDataUpdateCoordinator(hass, client=client, scan_interval=300)
+    coordinator = PodPointDataUpdateCoordinator(
+        hass, client=client, scan_interval=timedelta(seconds=300)
+    )
 
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
+
 
 # TODO: Add a test for repair flow creation and cleanup
