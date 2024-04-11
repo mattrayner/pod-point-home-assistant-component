@@ -1,10 +1,11 @@
 """Test pod_point switch."""
 
 # import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 from email.utils import encode_rfc2231
 from typing import List
 from unittest.mock import Mock, call, patch
+import pytz
 
 # import aiohttp
 from homeassistant.components import switch
@@ -317,6 +318,32 @@ async def test_pod_point_entity(hass, bypass_get_data):
 
     entity.pod.model.name = None
     assert None == entity.image
+
+    # Test states for ev and evse suspended
+    assert "charging" == entity.state
+    entity.pod.charging_state = "suspended-ev"
+    entity._PodPointEntity__update_attrs()
+    assert entity.state == "suspended-ev"
+
+    entity.pod.charging_state = "suspended-evse"
+    entity._PodPointEntity__update_attrs()
+    assert entity.state == "suspended-evse"
+
+    entity.pod.statuses[0].key_name = 'available'
+    entity.pod.charging_state = "suspended-evse"
+    entity._PodPointEntity__update_attrs()
+    assert entity.state == "available"
+
+    entity.pod.statuses[0].key_name = 'out-of-service'
+    entity.pod.charging_state = "suspended-evse"
+    entity._PodPointEntity__update_attrs()
+    assert entity.state == "out-of-service"
+
+    # Test pending status
+    entity.coordinator.last_message_at = datetime.now(tz=pytz.utc)
+    entity.pod.last_message_at = datetime.now(tz=pytz.utc) - timedelta(minutes=5)
+    entity._PodPointEntity__update_attrs()
+    assert entity.state == "pending"
 
 
 @pytest.mark.asyncio

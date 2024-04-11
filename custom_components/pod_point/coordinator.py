@@ -340,8 +340,8 @@ expecting more charges. Page {page}, looking for : {last_charge_ids}"
         return (new_pods, new_pods_by_id)
 
     async def __async_refresh_firmware(
-        self, new_pods: List[Pod], new_pods_by_id: Dict[str, List[Pod]]
-    ) -> Dict[str, List[Pod]]:
+        self, new_pods: List[Pod], new_pods_by_id: Dict[str, Pod]
+    ) -> Dict[str, Pod]:
         _LOGGER.debug("=== FIRMWARE STATUS UPDATE ===")
 
         for pod in new_pods:
@@ -367,8 +367,8 @@ expecting more charges. Page {page}, looking for : {last_charge_ids}"
         return new_pods_by_id
 
     async def __async_update_pod_connection_status(
-        self, new_pods_by_id: Dict[str, List[Pod]]
-    ) -> Dict[str, List[Pod]]:
+        self, new_pods_by_id: Dict[str, Pod]
+    ) -> Dict[str, Pod]:
         _LOGGER.debug("=== POD CONNECTION STATUS UPDATE ===")
 
         # flat_pods = [item for row in new_pods_by_id.values() for item in row]
@@ -381,16 +381,8 @@ expecting more charges. Page {page}, looking for : {last_charge_ids}"
                 pod.last_message_at = connectivity_status.last_message_at
                 pod.charging_state = connectivity_status.charging_state
 
-                pod.statuses.append(
-                    Pod.Status(
-                        99,
-                        connectivity_status.charging_state,
-                        connectivity_status.charging_state,
-                        connectivity_status.charging_state,
-                        "A",
-                        1,
-                    )
-                )
+                if pod.charging_state is not None:
+                    pod.charging_state = pod.charging_state.lower().replace("_", "-")
 
                 new_pods_by_id[pod.unit_id] = pod
 

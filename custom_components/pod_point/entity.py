@@ -85,6 +85,14 @@ class PodPointEntity(CoordinatorEntity):
         should_be_charging = is_charging_state and (
             is_override_charge_mode or is_manual_charge_mode
         )
+        should_be_suspended_ev = (
+                is_charging_state
+                and (pod.charging_state == ATTR_STATE_SUSPENDED_EV)
+        )
+        should_be_suspended_evse = (
+                is_charging_state
+                and (pod.charging_state == ATTR_STATE_SUSPENDED_EVSE)
+        )
         should_be_pending = (
             self.coordinator.last_message_at is not None
             and self.pod.last_message_at is not None
@@ -104,6 +112,14 @@ class PodPointEntity(CoordinatorEntity):
         # Pod should be charging if pod is charging and state is overriden, or manual charge mode
         if should_be_charging:
             state = ATTR_STATE_CHARGING
+
+        # Pod should be suspended evse if pod is charging and connectivity status is suspended evse
+        if should_be_suspended_evse:
+            state = ATTR_STATE_SUSPENDED_EVSE
+
+        # Pod should be suspended ev if pod is charging and connectivity status is suspended ev
+        if should_be_suspended_ev:
+            state = ATTR_STATE_SUSPENDED_EV
 
         # Should this pod be pending?
         if should_be_pending:
