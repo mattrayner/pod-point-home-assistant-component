@@ -51,7 +51,7 @@
                     "unavailable": "Unavailable",
                     "charging": "Charging",
                     "suspended-ev": "Charged",
-                    "suspended-evse": "Charging Paused",
+                    "suspended-evse": "Charging paused",
                     "idle": "Ready",
                     "pending": "Pending",
                     "out-of-service": "Out of service",
