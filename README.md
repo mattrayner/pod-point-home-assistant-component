@@ -109,16 +109,16 @@ Multiple statuses are reported by the main pod sensor. The statuses and their me
 
 status | display value | description
 ---|---|---
-available | Available | The pod is available for charging. Connecting a vehicle will begin a charging session.
-unavailable | Unavailable | The pod is unavailable for charging.
-charging | Charging | Vehicle is connected and charging is possible. Note: If you car has completed charging but it still connected to the pod, the status will remain as 'connected'.
-suspended-ev | Charged | Charging has been stopped by your electric vehicle (ev). This usually means that your vehicle is charged, by may also happen if your EV has its own schedule.
-suspended-evse | Charging Paused | Charging has been paused by your electric vehicle supply equipment (evse). This is how Pod Point referrs to your pod. This could happen because your pod is balancing your home's electrical supply, or the cable is not fully seated into the device (only applied to universal pods).
-idle | Ready | The pod is ready for charging. Connecting a vehicle will begin a charging session. This is similar to the `available` status. Pod Point do not report on when each will be provided.
-pending | Pending | Pod point do not document this status.
+available | Available | Pod is available to charge, may now be replace with "idle"
+unavailable | Unavailable | Pod is unavailable
+charging | Charging | Pod is charging an EV
+suspended-ev | Charged | Connected EV has suspended charging. Can mean 'Charged', or 'EV has a schedule set'. Will show as 'Charged' to align with the Pod Point app.
+suspended-evse | Charging Paused | Charging has been paused by the Pod, could be a schedule, or the key at the bottom has been turned off, or the charger is balanging house power
+idle | Ready | Pod is ready to charge when an EV is connected
+pending | Pending | An action has been requested (disable charging, charge now, delete charge now, enable charging) but the Pod has not yet acknowledged it. Can take 10 minutes to update.
 out-of-service | Out of service | This pod is not in service. Reach out to Pod Point for more information.
 waiting-for-schedule | Waiting for schedule | Pod charging is currently blocked by schedule. Connecting your vehicle will *not* begin charging.
-connected-waiting-for-schedule | Connected but waiting for schedule | Your vehicle is connected to the pod but charging is currently prevented due to a schedule.
+connected-waiting-for-schedule | Connected but waiting for schedule | Pod is connected to an EV but schedule is preventing charging
 charge-override | Charging now (schedule override) | 'Charge now' has been used to override your pods schedule and start a charging session now.
 
 ## Charge Modes
