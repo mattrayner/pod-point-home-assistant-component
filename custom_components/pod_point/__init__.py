@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Dict, List
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.core import Config, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -89,9 +90,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     should_cache = False
     files_path = Path(__file__).parent / "static"
     if hass.http:
-        hass.http.register_static_path(
-            APP_IMAGE_URL_BASE, str(files_path), should_cache
-        )
+        await hass.http.async_register_static_paths([
+            StaticPathConfig(
+                APP_IMAGE_URL_BASE, str(files_path), should_cache
+            )
+        ])
 
     # For every platform defined, check if the user has disabled it. If not, set it up
     for platform in PLATFORMS:
