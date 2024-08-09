@@ -45,6 +45,7 @@ People *love* thorough bug reports. I'm not even kidding.
 ## Use a Consistent Coding Style
 
 Use [black](https://github.com/ambv/black) to make sure the code follows the style.
+Use [isort](https://pycqa.github.io/isort/) to make sure the import follows the style
 
 ## Test your code modification
 

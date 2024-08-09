@@ -1,56 +1,48 @@
 """Test pod_point sensors."""
 
 import asyncio
-import pytest
-import aiohttp
-import homeassistant.helpers.aiohttp_client as client
-from homeassistant.components.sensor import SensorDeviceClass
-from .fixtures import POD_COMPLETE_FIXTURE
-from unittest.mock import call, patch
-from typing import List, Union
 from datetime import datetime
+from typing import List, Union
+from unittest.mock import Mock, call, patch
 
+import aiohttp
 from homeassistant.components import switch
+from homeassistant.components.sensor import (
+    STATE_CLASS_TOTAL,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
+)
 from homeassistant.components.switch import SERVICE_TURN_OFF, SERVICE_TURN_ON
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    DEVICE_CLASS_ENERGY,
+    ENERGY_KILO_WATT_HOUR,
+)
+import homeassistant.helpers.aiohttp_client as client
+from podpointclient.pod import Pod
+import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 # from custom_components.pod_point import async_setup_entry
 from custom_components.pod_point.const import (
+    ATTR_STATE,
+    ATTR_STATE_AVAILABLE,
+    ATTR_STATE_CHARGING,
+    ATTR_STATE_CONNECTED_WAITING,
+    ATTR_STATE_OUT_OF_SERVICE,
+    ATTR_STATE_UNAVAILABLE,
+    ATTR_STATE_WAITING,
     CONF_CURRENCY,
     DEFAULT_NAME,
     DOMAIN,
     SENSOR,
     SWITCH,
-    ATTR_STATE,
-    ATTR_STATE_AVAILABLE,
-    ATTR_STATE_UNAVAILABLE,
-    ATTR_STATE_CHARGING,
-    ATTR_STATE_OUT_OF_SERVICE,
-    ATTR_STATE_WAITING,
-    ATTR_STATE_CONNECTED_WAITING,
 )
-from custom_components.pod_point.update import (
-    PodUpdateEntity,
-    async_setup_entry,
-)
-
-from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-    DEVICE_CLASS_ENERGY,
-)
-
-from homeassistant.components.sensor import (
-    STATE_CLASS_TOTAL,
-    STATE_CLASS_TOTAL_INCREASING,
-)
-
-from podpointclient.pod import Pod
-from .test_coordinator import subject_with_data as coordinator_with_data
+from custom_components.pod_point.update import PodUpdateEntity, async_setup_entry
 
 from .const import MOCK_CONFIG
-
-from unittest.mock import Mock
+from .fixtures import POD_COMPLETE_FIXTURE
+from .test_coordinator import subject_with_data as coordinator_with_data
 
 
 async def setup_updates(hass) -> List[PodUpdateEntity]:

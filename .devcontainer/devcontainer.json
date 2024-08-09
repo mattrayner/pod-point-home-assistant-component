@@ -1,6 +1,6 @@
 {
 	"name": "Pod Point integration development",
-	"image": "mcr.microsoft.com/devcontainers/python:3.10-bullseye",
+	"image": "mcr.microsoft.com/devcontainers/python:3.12-bullseye",
 	"postCreateCommand": "scripts/setup",
 	"forwardPorts": [
 		8123
@@ -17,26 +17,34 @@
 				"ms-python.python",
 				"github.vscode-pull-request-github",
 				"ryanluker.vscode-coverage-gutters",
-				"ms-python.vscode-pylance"
+				"ms-python.vscode-pylance",
+				"ms-python.pylint",
+				"ms-python.black-formatter",
+				"ms-python.isort",
+				"ryanluker.vscode-coverage-gutters",
+				"GitHub.vscode-pull-request-github",
+				"github.vscode-github-actions"
 			],
 			"settings": {
 				"files.eol": "\n",
 				"editor.tabSize": 4,
-				"python.pythonPath": "/usr/bin/python3",
 				"python.analysis.autoSearchPaths": false,
 				"python.linting.pylintEnabled": true,
 				"python.linting.enabled": true,
 				"python.formatting.provider": "black",
-				"python.formatting.blackPath": "/usr/local/py-utils/bin/black",
 				"editor.formatOnPaste": false,
 				"editor.formatOnSave": true,
 				"editor.formatOnType": true,
-				"files.trimTrailingWhitespace": true
+				"files.trimTrailingWhitespace": true,
+				"python.testing.pytestArgs": [
+					"--no-cov"
+				],
 			}
 		}
 	},
 	"remoteUser": "vscode",
 	"features": {
-		"ghcr.io/devcontainers/features/rust:1": {}
+		"ghcr.io/devcontainers/features/rust:1": "latest",
+		"ghcr.io/devcontainers-contrib/features/pylint": "latest"
 	}
 }

@@ -1,15 +1,14 @@
 """Test pod_point switch."""
 
+from time import sleep
 from unittest.mock import patch
 
 from homeassistant.components.switch import SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.const import ATTR_ENTITY_ID
 from podpointclient.pod import Pod
-from time import sleep
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.pod_point import async_setup_entry
 from custom_components.pod_point.const import DOMAIN, SWITCH
 
 from .const import MOCK_CONFIG
@@ -22,8 +21,9 @@ async def test_allow_charging_switch(hass, bypass_get_data):
     # Create a mock entry so we don't have to go through config flow
     print("CREATE CONFIG ENTRY")
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
+    config_entry.add_to_hass(hass)
     print("---> SETUP CONFIG ENTRY")
-    assert await async_setup_entry(hass, config_entry)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     print("---> WAIT")
     waited = await hass.async_block_till_done()
     print(f"---> WAITED {waited}")
@@ -66,7 +66,8 @@ async def test_charge_mode_switch(hass, bypass_get_data):
     """Test charge mode switch"""
     # Create a mock entry so we don't have to go through config flow
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
-    assert await async_setup_entry(hass, config_entry)
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Functions/objects can be patched directly in test code as well and can be used to test

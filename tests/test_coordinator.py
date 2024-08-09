@@ -1,31 +1,31 @@
 """Test pod_point setup process."""
 
 # from unittest import mock
+from datetime import timedelta
 from email.headerregistry import ContentTransferEncodingHeader
 from unittest.mock import MagicMock
-from homeassistant.exceptions import ConfigEntryNotReady
-from datetime import timedelta
+
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from podpointclient.client import PodPointClient
+from podpointclient.errors import ApiConnectionError, AuthError, SessionError
+from podpointclient.factories import FirmwareFactory, PodFactory, UserFactory
+from podpointclient.pod import Pod
+from podpointclient.user import User
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from custom_components.pod_point import async_setup_entry
+from custom_components.pod_point.const import DOMAIN
 from custom_components.pod_point.coordinator import (
     PodPointDataUpdateCoordinator,
     UpdateFailed,
 )
-from custom_components.pod_point.const import DOMAIN
-from custom_components.pod_point import async_setup_entry
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from podpointclient.client import PodPointClient
-from podpointclient.pod import Pod
-from podpointclient.user import User
-from podpointclient.errors import AuthError, ApiConnectionError, SessionError
-from podpointclient.factories import FirmwareFactory, UserFactory, PodFactory
 
 from .const import MOCK_CONFIG
 from .fixtures import (
-    POD_COMPLETE_FIXTURE,
     FIRMWARE_COMPLETE_FIXTURE,
+    POD_COMPLETE_FIXTURE,
     USER_COMPLETE_FIXTURE,
 )
 

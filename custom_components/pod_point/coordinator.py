@@ -2,10 +2,10 @@
 Data coordinator for pod point client
 """
 
+from datetime import datetime, timedelta
 import logging
 from typing import Dict, List, Set, Tuple
 
-import pytz
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import issue_registry as ir
@@ -15,8 +15,7 @@ from podpointclient.client import PodPointClient
 from podpointclient.errors import ApiConnectionError, AuthError, SessionError
 from podpointclient.pod import Firmware, Pod
 from podpointclient.user import User
-
-from datetime import datetime, timedelta
+import pytz
 
 from .const import DOMAIN, LIMITED_POD_INCLUDES
 
@@ -185,7 +184,7 @@ Updated Charges: %s\nCombined Charges: %s",
                 "Recieved an unexpected exception when updating data from Pod Point. \
 If this issue persists, please contact the developer."
             )
-            _LOGGER.error(exception)
+            _LOGGER.exception(exception)
             raise UpdateFailed() from exception
 
     def __group_pods_by_unit_id(self, pods: List[Pod] = None) -> Dict[int, Pod]:

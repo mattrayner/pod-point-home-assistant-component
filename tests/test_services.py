@@ -6,7 +6,6 @@ from podpointclient.pod import Pod
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.pod_point import async_setup_entry
 from custom_components.pod_point.const import DOMAIN, SERVICE_CHARGE_NOW
 from custom_components.pod_point.services import PodPointServiceException
 
@@ -19,7 +18,8 @@ async def test_charge_now_service_with_data(hass, bypass_get_data):
     """Test charge_mode service"""
     # Create a mock entry so we don't have to go through config flow
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
-    assert await async_setup_entry(hass, config_entry)
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Functions/objects can be patched directly in test code as well and can be used to test

@@ -11,6 +11,7 @@ import logging
 from pathlib import Path
 from typing import Dict, List
 
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Config, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -33,8 +34,7 @@ from .const import (
     STARTUP_MESSAGE,
 )
 from .coordinator import PodPointDataUpdateCoordinator
-from .services import async_register_services, async_deregister_services
-
+from .services import async_deregister_services, async_register_services
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -89,17 +89,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     should_cache = False
     files_path = Path(__file__).parent / "static"
     if hass.http:
-        hass.http.register_static_path(
-            APP_IMAGE_URL_BASE, str(files_path), should_cache
+        await hass.http.async_register_static_paths(
+            [StaticPathConfig(APP_IMAGE_URL_BASE, str(files_path), should_cache)]
         )
 
     # For every platform defined, check if the user has disabled it. If not, set it up
     for platform in PLATFORMS:
         if entry.options.get(platform, True):
             coordinator.platforms.append(platform)
-            hass.async_add_job(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-            )
+
+    await hass.config_entries.async_forward_entry_setups(entry, coordinator.platforms)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 

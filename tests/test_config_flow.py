@@ -14,12 +14,12 @@ from custom_components.pod_point.const import (
     CONF_CURRENCY,
     CONF_HTTP_DEBUG,
     CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
     DOMAIN,
     PLATFORMS,
     SENSOR,
     SWITCH,
     UPDATE,
-    CONF_SCAN_INTERVAL,
 )
 
 from .const import MOCK_CONFIG

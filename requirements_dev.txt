@@ -1,2 +1,4 @@
-homeassistant==2023.2.5
+homeassistant
 pylint
+black
+isort
