@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 from email.utils import encode_rfc2231
 from typing import List
 from unittest.mock import Mock, call, patch
-import pytz
 
 # import aiohttp
 from homeassistant.components import switch
@@ -25,6 +24,7 @@ from podpointclient.pod import Pod
 from podpointclient.schedule import Schedule, ScheduleStatus
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+import pytz
 
 from custom_components.pod_point import async_setup_entry
 from custom_components.pod_point.const import (
@@ -329,12 +329,12 @@ async def test_pod_point_entity(hass, bypass_get_data):
     entity._PodPointEntity__update_attrs()
     assert entity.state == "suspended-evse"
 
-    entity.pod.statuses[0].key_name = 'available'
+    entity.pod.statuses[0].key_name = "available"
     entity.pod.charging_state = "suspended-evse"
     entity._PodPointEntity__update_attrs()
     assert entity.state == "available"
 
-    entity.pod.statuses[0].key_name = 'out-of-service'
+    entity.pod.statuses[0].key_name = "out-of-service"
     entity.pod.charging_state = "suspended-evse"
     entity._PodPointEntity__update_attrs()
     assert entity.state == "out-of-service"

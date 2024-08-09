@@ -18,16 +18,16 @@ from .const import (
     ATTR_STATE_AVAILABLE,
     ATTR_STATE_CHARGING,
     ATTR_STATE_CONNECTED_WAITING,
+    ATTR_STATE_IDLE,
+    ATTR_STATE_PENDING,
     ATTR_STATE_RANKING,
+    ATTR_STATE_SUSPENDED_EV,
+    ATTR_STATE_SUSPENDED_EVSE,
     ATTR_STATE_WAITING,
     ATTRIBUTION,
     CHARGING_FLAG,
     DOMAIN,
     NAME,
-    ATTR_STATE_SUSPENDED_EV,
-    ATTR_STATE_SUSPENDED_EVSE,
-    ATTR_STATE_IDLE,
-    ATTR_STATE_PENDING,
 )
 from .coordinator import PodPointDataUpdateCoordinator
 
@@ -85,13 +85,11 @@ class PodPointEntity(CoordinatorEntity):
         should_be_charging = is_charging_state and (
             is_override_charge_mode or is_manual_charge_mode
         )
-        should_be_suspended_ev = (
-                is_charging_state
-                and (pod.charging_state == ATTR_STATE_SUSPENDED_EV)
+        should_be_suspended_ev = is_charging_state and (
+            pod.charging_state == ATTR_STATE_SUSPENDED_EV
         )
-        should_be_suspended_evse = (
-                is_charging_state
-                and (pod.charging_state == ATTR_STATE_SUSPENDED_EVSE)
+        should_be_suspended_evse = is_charging_state and (
+            pod.charging_state == ATTR_STATE_SUSPENDED_EVSE
         )
         should_be_pending = (
             self.coordinator.last_message_at is not None

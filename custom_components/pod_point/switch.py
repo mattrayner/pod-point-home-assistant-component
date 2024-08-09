@@ -1,16 +1,16 @@
 """Switch platform for pod_point."""
 
+from datetime import datetime
 import logging
 
-import pytz
 from homeassistant.components.switch import SwitchEntity
 from podpointclient.charge_mode import ChargeMode
 from podpointclient.client import PodPointClient
+import pytz
 
 from .const import DOMAIN, SWITCH_ICON
 from .coordinator import PodPointDataUpdateCoordinator
 from .entity import PodPointEntity
-from datetime import datetime
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 

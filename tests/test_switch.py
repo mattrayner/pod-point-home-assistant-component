@@ -1,11 +1,11 @@
 """Test pod_point switch."""
 
+from time import sleep
 from unittest.mock import patch
 
 from homeassistant.components.switch import SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.const import ATTR_ENTITY_ID
 from podpointclient.pod import Pod
-from time import sleep
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 

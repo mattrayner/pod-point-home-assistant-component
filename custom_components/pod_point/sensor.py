@@ -10,9 +10,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfEnergy, UnitOfTime, SIGNAL_STRENGTH_DECIBELS
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import SIGNAL_STRENGTH_DECIBELS, UnitOfEnergy, UnitOfTime
 from homeassistant.core import callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from podpointclient.charge_mode import ChargeMode
 from podpointclient.charge_override import ChargeOverride
@@ -25,11 +25,11 @@ from .const import (
     ATTR_STATE_AVAILABLE,
     ATTR_STATE_CHARGING,
     ATTR_STATE_CONNECTED_WAITING,
+    ATTR_STATE_IDLE,
     ATTR_STATE_OUT_OF_SERVICE,
+    ATTR_STATE_PENDING,
     ATTR_STATE_SUSPENDED_EV,
     ATTR_STATE_SUSPENDED_EVSE,
-    ATTR_STATE_IDLE,
-    ATTR_STATE_PENDING,
     ATTR_STATE_UNAVAILABLE,
     ATTR_STATE_WAITING,
     ATTRIBUTION,

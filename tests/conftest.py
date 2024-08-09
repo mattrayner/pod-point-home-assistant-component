@@ -17,24 +17,23 @@
 # pytest includes fixtures OOB which you can use as defined on this page)
 from unittest.mock import patch
 
+from podpointclient.errors import AuthError
+from podpointclient.factories import (
+    ChargeFactory,
+    ConnectivityStatusFactory,
+    FirmwareFactory,
+    PodFactory,
+    UserFactory,
+)
+import pytest
+
 from .fixtures import (
     CHARGES_COMPLETE_FIXTURE,
-    POD_COMPLETE_FIXTURE,
-    FIRMWARE_COMPLETE_FIXTURE,
-    USER_COMPLETE_FIXTURE,
     CONNECTIVITY_STATUS_COMPLETE_FIXTURE,
+    FIRMWARE_COMPLETE_FIXTURE,
+    POD_COMPLETE_FIXTURE,
+    USER_COMPLETE_FIXTURE,
 )
-
-from podpointclient.factories import (
-    PodFactory,
-    ChargeFactory,
-    FirmwareFactory,
-    UserFactory,
-    ConnectivityStatusFactory,
-)
-from podpointclient.errors import AuthError
-
-import pytest
 
 pytest_plugins = "pytest_homeassistant_custom_component"
 

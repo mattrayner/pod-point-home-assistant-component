@@ -9,7 +9,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.helpers.entity import EntityCategory
 
-from .const import ATTR_STATE, DOMAIN, ATTRIBUTION, ATTR_CONNECTION_STATE_ONLINE
+from .const import ATTR_CONNECTION_STATE_ONLINE, ATTR_STATE, ATTRIBUTION, DOMAIN
 from .coordinator import PodPointDataUpdateCoordinator
 from .entity import PodPointEntity
 

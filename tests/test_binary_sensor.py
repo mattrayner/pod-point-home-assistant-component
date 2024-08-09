@@ -8,20 +8,21 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.helpers.entity import EntityCategory
+from podpointclient.connectivity_status import ConnectivityStatus, Evse
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.pod_point import async_setup_entry
-from custom_components.pod_point.const import (
-    ATTR_CONNECTION_STATE_ONLINE,
-    DOMAIN, ATTR_STATE,
-)
 from custom_components.pod_point.binary_sensor import (
     PodPointCableConnectionSensor,
     PodPointCloudConnectionSensor,
     async_setup_entry,
 )
-from podpointclient.connectivity_status import ConnectivityStatus, Evse
+from custom_components.pod_point.const import (
+    ATTR_CONNECTION_STATE_ONLINE,
+    ATTR_STATE,
+    DOMAIN,
+)
 
 from .const import MOCK_CONFIG
 from .fixtures import CONNECTIVITY_STATUS_COMPLETE_FIXTURE
@@ -43,9 +44,9 @@ async def setup_sensors(hass) -> List[BinarySensorEntity]:
     await async_setup_entry(hass, config_entry, mock)
 
     print(mock.call_args_list)
-    sensors: List[Union(PodPointCableConnectionSensor, PodPointCloudConnectionSensor)] = (
-        mock.call_args_list[0][0][0]
-    )
+    sensors: List[
+        Union(PodPointCableConnectionSensor, PodPointCloudConnectionSensor)
+    ] = mock.call_args_list[0][0][0]
 
     return (config_entry, sensors)
 
@@ -71,11 +72,15 @@ async def test_cloud_connection_sensor(hass, bypass_get_data):
     assert "pod_point_12234_PSL-123456_cloud_connection" == status.unique_id
     assert "Cloud Connection" == status.name
 
-    status.pod.connectivity_status = ConnectivityStatus(CONNECTIVITY_STATUS_COMPLETE_FIXTURE)
+    status.pod.connectivity_status = ConnectivityStatus(
+        CONNECTIVITY_STATUS_COMPLETE_FIXTURE
+    )
     assert status.is_on is True
     assert "mdi:cloud-check-variant" == status.icon
 
-    status.pod.connectivity_status.evses[0].connectivity_state.connectivity_status = "FOO"
+    status.pod.connectivity_status.evses[0].connectivity_state.connectivity_status = (
+        "FOO"
+    )
     assert status.is_on is False
     assert "mdi:cloud-off" == status.icon
 
@@ -108,4 +113,3 @@ async def test_cable_connection_sensor(hass, bypass_get_data):
 
     status.extra_attrs[ATTR_STATE] = "foo"
     assert status.is_on is False
-
