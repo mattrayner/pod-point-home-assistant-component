@@ -44,6 +44,7 @@
 	},
 	"remoteUser": "vscode",
 	"features": {
-		"ghcr.io/devcontainers/features/rust:1": {}
+		"ghcr.io/devcontainers/features/rust:1": "latest",
+		"ghcr.io/devcontainers-contrib/features/pylint": "latest"
 	}
 }

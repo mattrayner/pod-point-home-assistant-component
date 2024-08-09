@@ -184,7 +184,7 @@ Updated Charges: %s\nCombined Charges: %s",
                 "Recieved an unexpected exception when updating data from Pod Point. \
 If this issue persists, please contact the developer."
             )
-            _LOGGER.error(exception)
+            _LOGGER.exception(exception)
             raise UpdateFailed() from exception
 
     def __group_pods_by_unit_id(self, pods: List[Pod] = None) -> Dict[int, Pod]:
