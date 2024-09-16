@@ -168,6 +168,7 @@ Solo Universal | /api/pod_point/static/uc.png
 Solo Tethered | /api/pod_point/static/2c.png
 Solo 3 Universal | /api/pod_point/static/uc-03.png
 Solo 3 Tethered | /api/pod_point/static/2c-03.png
+Solo 3S Universal | /api/pod_point/static/uc-05.png
 
 #### Which pod do I have?
 
