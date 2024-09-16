@@ -313,8 +313,12 @@ async def test_pod_point_entity(hass, bypass_get_data):
     assert "/api/pod_point/static/uc-03.png" == entity.image
     assert True is entity.connected
 
-    
+    entity.pod.model.name = "S7-UC-05-ACA"
     assert "S7-UC-05-ACA" == entity.model
+    assert "/api/pod_point/static/uc-05.png" == entity.image
+
+    entity.pod.model.name = "S7-1C-05-ACA"
+    assert "S7-1C-05-ACA" == entity.model
     assert "/api/pod_point/static/uc-05.png" == entity.image
 
     entity.pod.model.name = "XX-UP-XX-XX"
