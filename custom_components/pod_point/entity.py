@@ -355,10 +355,7 @@ class PodPointEntity(CoordinatorEntity):
 
         img = model_type
 
-        if model_id == "03":
-            img = f"{model_type}-{model_id}"
-        
-        if model_id == "05":
+        if model_id == "03" || model_id == "05":
             img = f"{model_type}-{model_id}"
 
         return f"{APP_IMAGE_URL_BASE}/{img.lower()}.png"
