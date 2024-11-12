@@ -2,5 +2,5 @@
     "name": "Pod Point",
     "country": "GB",
     "hacs": "1.6.0",
-    "homeassistant": "2024.7.1"
+    "homeassistant": "2024.11.0"
 }
