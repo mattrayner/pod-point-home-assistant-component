@@ -1,7 +1,6 @@
 """Binary sensor platform for pod_point."""
 
 import logging
-from typing import Any, Dict
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -9,7 +8,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.helpers.entity import EntityCategory
 
-from .const import ATTR_CONNECTION_STATE_ONLINE, ATTR_STATE, ATTRIBUTION, DOMAIN
+from .const import DOMAIN
 from .coordinator import PodPointDataUpdateCoordinator
 from .entity import PodPointEntity
 
@@ -48,7 +47,7 @@ class PodPointCableConnectionSensor(PodPointEntity, BinarySensorEntity):
         return f"{super().unique_id}_cable_status"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if the binary_sensor is on."""
         return self.connected
 
@@ -66,18 +65,9 @@ class PodPointCloudConnectionSensor(PodPointEntity, BinarySensorEntity):
         return f"{super().unique_id}_cloud_connection"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the binary_sensor is on."""
-        if self.pod is None:
-            return False
-
-        if self.pod.connectivity_status is None:
-            return False
-
-        return (
-            self.pod.connectivity_status.connectivity_status
-            == ATTR_CONNECTION_STATE_ONLINE
-        )
+        return self.online
 
     @property
     def icon(self):
