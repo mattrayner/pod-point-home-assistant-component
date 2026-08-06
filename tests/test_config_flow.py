@@ -28,7 +28,10 @@ from .const import MOCK_CONFIG
 DHCP_SERVICE_INFO = dhcp.DhcpServiceInfo(
     hostname="podpoint-245EBE000000",
     ip="192.168.1.200",
-    macaddress="245EBE000000",
+    # Home Assistant requires this unformatted and lowercase. An uppercase value now
+    # raises "ValueError: macaddress is not correctly formatted" at import time,
+    # which fails collection of this entire module - and with it the whole suite.
+    macaddress="245ebe000000",
 )
 
 

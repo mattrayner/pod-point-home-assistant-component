@@ -136,7 +136,10 @@ class PodPointOptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry):
         """Initialize HACS options flow."""
-        self.config_entry = config_entry
+        # `config_entry` is a read-only property on OptionsFlow as of Home Assistant
+        # 2024.11, and is populated by the flow manager. Assigning it raises
+        # AttributeError, which the frontend shows as
+        # "Config flow could not be loaded: 500 Internal Server Error".
         self.options = dict(config_entry.options)
 
     async def async_step_init(

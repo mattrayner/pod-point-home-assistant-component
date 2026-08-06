@@ -172,3 +172,63 @@ async def test_coordinator_refresh_unexpected_exception(hass, error_on_get_data)
 
 
 # TODO: Add a test for repair flow creation and cleanup
+
+
+# Pod Point can return a charge schedule with no status, in which case
+# podpointclient leaves Schedule.status as None. Schedule.dict and
+# Schedule.is_active both dereference it unconditionally, so one such schedule
+# raised AttributeError and took down every platform at setup.
+@pytest.mark.asyncio
+async def test_coordinator_refresh_defaults_missing_schedule_status(
+    hass, bypass_get_data
+):
+    """A schedule with no status is given the library default rather than crashing."""
+    coordinator: PodPointDataUpdateCoordinator = await subject(hass)
+
+    await coordinator.async_refresh()
+
+    pod: Pod = coordinator.data[0]
+    assert len(pod.charge_schedules) > 0
+
+    # Simulate the API response that caused the crash
+    pod.charge_schedules[0].status = None
+
+    coordinator._PodPointDataUpdateCoordinator__default_missing_schedule_statuses(
+        coordinator._PodPointDataUpdateCoordinator__pods_with_schedules()
+    )
+
+    schedule = pod.charge_schedules[0]
+    assert schedule.status is not None
+    assert schedule.is_active is False
+
+    # The two call sites that used to raise
+    assert schedule.dict["status"]["is_active"] is False
+    assert pod.dict is not None
+
+
+# The user carries its own nested Pod at user.unit.pod, with its own schedules, which
+# sensor.py reads via `attrs.update(user.dict)`. That is a second route to the same
+# crash, and it fires on every coordinator refresh rather than at setup:
+#   File "custom_components/pod_point/sensor.py", line 663, in __update_attrs
+#     attrs.update(user.dict)
+@pytest.mark.asyncio
+async def test_coordinator_refresh_defaults_user_pod_schedule_status(
+    hass, bypass_get_data
+):
+    """A null status on the user's own nested pod is defaulted too."""
+    coordinator: PodPointDataUpdateCoordinator = await subject(hass)
+
+    await coordinator.async_refresh()
+
+    user_pod = getattr(getattr(coordinator.user, "unit", None), "pod", None)
+    if user_pod is None or not user_pod.charge_schedules:
+        pytest.skip("user fixture has no nested pod schedules")
+
+    user_pod.charge_schedules[0].status = None
+
+    coordinator._PodPointDataUpdateCoordinator__default_missing_schedule_statuses(
+        coordinator._PodPointDataUpdateCoordinator__pods_with_schedules()
+    )
+
+    assert user_pod.charge_schedules[0].status is not None
+    assert coordinator.user.dict is not None
