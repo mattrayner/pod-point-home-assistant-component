@@ -14,18 +14,29 @@
                     "password": "Password"
                 }
             },
+            "mfa": {
+                "description": "Enter the verification code sent to your phone by text.",
+                "data": {
+                    "code": "Verification code"
+                }
+            },
             "reauth_confirm": {
                 "description": "Pod Point needs to re-authenticate your account."
             }
         },
         "error": {
             "auth": "Email/Password authentication failed.",
+            "mfa_start": "Could not send a verification text. Check that SMS verification is set up in Pod Point and try again.",
+            "mfa_code": "The verification code was incorrect. Try again.",
+            "mfa_failed": "Two-step sign-in could not be completed. Sign in again to request a new code.",
             "session": "Unable to create a user session. Please try again later."
         },
         "abort": {
             "single_instance_allowed": "Only a single instance is allowed.",
             "reauth_successful": "Re-authentication was successful",
-            "already_configured": "Pod is already configured."
+            "already_configured": "Pod is already configured.",
+            "wrong_account": "Sign in with the account already configured for this integration.",
+            "mfa_expired": "The verification session expired. Start setup again."
         }
     },
     "options": {

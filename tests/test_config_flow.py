@@ -1,13 +1,14 @@
 """Test pod_point config flow."""
 
 from types import MappingProxyType
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info import dhcp
 from homeassistant.core import HomeAssistant
 import pytest
+from podpointclient.errors import MfaInvalidCode, MfaRequired
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.pod_point.const import (
@@ -15,6 +16,7 @@ from custom_components.pod_point.const import (
     CONF_CURRENCY,
     CONF_HTTP_DEBUG,
     CONF_PASSWORD,
+    CONF_REFRESH_TOKEN,
     CONF_SCAN_INTERVAL,
     DOMAIN,
     PLATFORMS,
@@ -106,20 +108,17 @@ async def test_reauth_config_flow(hass, bypass_get_data):
     assert result_2["type"] == FlowResultType.FORM
     assert result_2["step_id"] == "user"
 
-    updated_config = MOCK_CONFIG
-    updated_config[CONF_PASSWORD] = "NewH8x0rP455!"
+    updated_config = {**MOCK_CONFIG, CONF_PASSWORD: "NewH8x0rP455!"}
 
     # If a user entered a new password, this would happen
     result_3 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=updated_config
     )
 
-    # Check that the config flow is complete and a new entry is created with
-    # the input data
-    assert result_3["type"] == FlowResultType.CREATE_ENTRY
-    assert result_3["title"] == "test@example.com"
-    assert result_3["data"] == MOCK_CONFIG
-    assert result_3["result"]
+    # Reauthentication updates the existing entry.
+    assert result_3["type"] == FlowResultType.ABORT
+    assert result_3["reason"] == "reauth_successful"
+    assert entry.data == updated_config
 
 
 # In this case, we want to simulate a failure during the config flow.
@@ -223,3 +222,50 @@ async def test_dhcp_login_error(hass: HomeAssistant, bypass_get_data) -> None:
             MOCK_CONFIG,
         )
         assert result["errors"] == {"base": "auth"}
+
+
+@pytest.mark.parametrize("reauth", [False, True])
+async def test_sms_config_flow(hass, reauth):
+    """Request an SMS, allow a retry, and save only the refresh token."""
+    if reauth:
+        entry = MockConfigEntry(
+            domain=DOMAIN, data={**MOCK_CONFIG, CONF_REFRESH_TOKEN: "old-token"}
+        )
+        entry.add_to_hass(hass)
+        entry.async_start_reauth(hass)
+        await hass.async_block_till_done()
+        flow = hass.config_entries.flow.async_progress()[0]
+        flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+    else:
+        flow = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    client = MagicMock()
+    client.email = MOCK_CONFIG["email"]
+    client.password = MOCK_CONFIG[CONF_PASSWORD]
+    client.async_credentials_verified = AsyncMock(side_effect=[MfaRequired(), True])
+    client.auth.async_start_mfa = AsyncMock()
+    client.auth.async_complete_mfa = AsyncMock(
+        side_effect=[MfaInvalidCode(400, "Incorrect code"), True]
+    )
+    client.auth.refresh_token = "new-token"
+
+    with patch("custom_components.pod_point.config_flow.PodPointClient", return_value=client):
+        flow = await hass.config_entries.flow.async_configure(flow["flow_id"], MOCK_CONFIG)
+        assert flow["step_id"] == "mfa"
+        client.auth.async_start_mfa.assert_awaited_once()
+
+        flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {"code": "000000"})
+        assert flow["errors"] == {"base": "mfa_code"}
+
+        flow = await hass.config_entries.flow.async_configure(flow["flow_id"], {"code": "012345"})
+        client.auth.async_complete_mfa.assert_awaited_with("012345")
+
+    expected = {**MOCK_CONFIG, CONF_REFRESH_TOKEN: "new-token"}
+    if reauth:
+        assert flow["reason"] == "reauth_successful"
+        assert entry.data == expected
+    else:
+        assert flow["type"] == FlowResultType.CREATE_ENTRY
+        assert flow["data"] == expected
