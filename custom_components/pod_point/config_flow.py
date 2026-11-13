@@ -7,9 +7,11 @@ from homeassistant import config_entries
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.selector import TextSelector, TextSelectorConfig, TextSelectorType
 from podpointclient.client import PodPointClient
+from podpointclient.errors import MfaError, MfaInvalidCode, MfaRequired
 import voluptuous as vol
 
 from .const import (
@@ -17,6 +19,7 @@ from .const import (
     CONF_EMAIL,
     CONF_HTTP_DEBUG,
     CONF_PASSWORD,
+    CONF_REFRESH_TOKEN,
     CONF_SCAN_INTERVAL,
     DEFAULT_CURRENCY,
     DEFAULT_HTTP_DEBUG,
@@ -37,6 +40,7 @@ class PodPointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize."""
         self._errors = {}
+        self._mfa_client: PodPointClient | None = None
 
     # pylint: disable=unused-argument
     async def async_step_reauth(self, user_input: Dict[str, str] = None) -> FlowResult:
@@ -59,32 +63,90 @@ class PodPointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._errors = {}
 
         if user_input is None:
-            user_input = {}
-            # Provide defaults for form
-            user_input[CONF_EMAIL] = ""
-            user_input[CONF_PASSWORD] = ""
+            email = ""
+            if self.source == config_entries.SOURCE_REAUTH:
+                email = self._get_reauth_entry().data[CONF_EMAIL]
+            return await self._show_config_form(email)
 
-            return await self._show_config_form(user_input)
+        email = user_input[CONF_EMAIL].strip()
+        if (
+            self.source == config_entries.SOURCE_REAUTH
+            and email.lower() != self._get_reauth_entry().data[CONF_EMAIL].lower()
+        ):
+            return self.async_abort(reason="wrong_account")
 
-        valid = await self._test_credentials(
-            user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
+        client = PodPointClient(
+            username=email,
+            password=user_input[CONF_PASSWORD],
+            session=async_get_clientsession(self.hass),
+        )
+        try:
+            valid = await client.async_credentials_verified()
+        except MfaRequired:
+            try:
+                await client.auth.async_start_mfa()
+            except MfaError:
+                self._errors["base"] = "mfa_start"
+                return await self._show_config_form(email)
+            self._mfa_client = client
+            return await self.async_step_mfa()
+        except Exception:  # pylint: disable=broad-except
+            valid = False
+
+        if not valid:
+            self._errors["base"] = "auth"
+            return await self._show_config_form(email)
+
+        return await self._async_finish_login(client)
+
+    async def async_step_mfa(self, user_input=None) -> FlowResult:
+        """Complete two-step verification with the code sent by text."""
+        client = self._mfa_client
+        if client is None:
+            return self.async_abort(reason="mfa_expired")
+
+        errors = {}
+        if user_input is not None:
+            try:
+                if await client.auth.async_complete_mfa(user_input["code"].strip()):
+                    if await client.async_credentials_verified():
+                        self._mfa_client = None
+                        return await self._async_finish_login(
+                            client, refresh_token=client.auth.refresh_token
+                        )
+            except MfaInvalidCode:
+                errors["base"] = "mfa_code"
+            except Exception:  # pylint: disable=broad-except
+                pass
+
+            if not errors:
+                self._mfa_client = None
+                self._errors["base"] = "mfa_failed"
+                return await self._show_config_form(client.email)
+
+        return self.async_show_form(
+            step_id="mfa",
+            data_schema=vol.Schema({
+                vol.Required("code"): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                )
+            }),
+            errors=errors,
         )
 
-        if valid is False:
-            self._errors["base"] = "auth"
-            return await self._show_config_form(user_input)
-
-        existing_entry = await self.async_set_unique_id(user_input[CONF_EMAIL].lower())
-
-        # If an entry exists, update it and show the re-auth message
-        if existing_entry:
-            self.hass.config_entries.async_update_entry(
-                existing_entry, title=user_input[CONF_EMAIL], data=user_input
+    async def _async_finish_login(
+        self, client: PodPointClient, refresh_token: str | None = None
+    ) -> FlowResult:
+        data = {CONF_EMAIL: client.email, CONF_PASSWORD: client.password}
+        if refresh_token:
+            data[CONF_REFRESH_TOKEN] = refresh_token
+        if self.source == config_entries.SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data=data
             )
-            await self.hass.config_entries.async_reload(existing_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
-
-        return self.async_create_entry(title=user_input[CONF_EMAIL], data=user_input)
+        await self.async_set_unique_id(client.email.lower())
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(title=client.email, data=data)
 
     @staticmethod
     @callback
@@ -103,32 +165,20 @@ class PodPointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
-    async def _show_config_form(
-        self, user_input: Dict[str, str]
-    ) -> FlowResult:  # pylint: disable=unused-argument
-        """Show the configuration form to edit location data."""
+    async def _show_config_form(self, email: str) -> FlowResult:
+        """Show the login form."""
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_EMAIL, default=user_input[CONF_EMAIL]): str,
-                    vol.Required(CONF_PASSWORD, default=user_input[CONF_PASSWORD]): str,
+                    vol.Required(CONF_EMAIL, default=email): str,
+                    vol.Required(CONF_PASSWORD): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    ),
                 }
             ),
             errors=self._errors,
         )
-
-    async def _test_credentials(self, username: str, password: str) -> bool:
-        """Return true if credentials is valid."""
-        try:
-            session = async_create_clientsession(self.hass)
-            client = PodPointClient(
-                username=username, password=password, session=session
-            )
-            return await client.async_credentials_verified()
-        except Exception:  # pylint: disable=broad-except
-            pass
-        return False
 
 
 class PodPointOptionsFlowHandler(config_entries.OptionsFlow):

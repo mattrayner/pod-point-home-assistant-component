@@ -13,7 +13,7 @@ from typing import Dict, List
 
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.core_config import Config
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -27,6 +27,7 @@ from .const import (
     CONF_EMAIL,
     CONF_HTTP_DEBUG,
     CONF_PASSWORD,
+    CONF_REFRESH_TOKEN,
     CONF_SCAN_INTERVAL,
     DEFAULT_HTTP_DEBUG,
     DEFAULT_SCAN_INTERVAL,
@@ -65,8 +66,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except KeyError:
         http_debug = DEFAULT_HTTP_DEBUG
 
+    refresh_token = entry.data.get(CONF_REFRESH_TOKEN)
+
+    @callback
+    def save_refresh_token(new_token: str) -> None:
+        nonlocal refresh_token
+        # A reauthentication flow may already have replaced this client's token.
+        if entry.data.get(CONF_REFRESH_TOKEN) == refresh_token:
+            hass.config_entries.async_update_entry(
+                entry, data={**entry.data, CONF_REFRESH_TOKEN: new_token}
+            )
+            refresh_token = new_token
+
     client = PodPointClient(
-        username=email, password=password, session=session, http_debug=http_debug
+        username=email,
+        password=password,
+        session=session,
+        http_debug=http_debug,
+        refresh_token=refresh_token,
+        on_refresh_token=save_refresh_token if refresh_token else None,
     )
 
     # If a scan interval is set, use that, or default
@@ -101,7 +119,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     await hass.config_entries.async_forward_entry_setups(entry, coordinator.platforms)
 
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+    options = dict(entry.options)
+
+    async def reload_on_options_change(hass: HomeAssistant, entry: ConfigEntry) -> None:
+        if entry.options != options:
+            await async_reload_entry(hass, entry)
+
+    entry.async_on_unload(entry.add_update_listener(reload_on_options_change))
 
     # Register the services
     await async_register_services(hass)

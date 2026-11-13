@@ -1,4 +1,4 @@
-podpointclient==1.6.1
+podpointclient @ https://github.com/davidcollom/podpointclient/archive/447c350aba3b9f8420f33a9c31aee032faeab511.tar.gz
 StrEnum>=0.4
 aiodiscover>=2.2.0
 scapy>=2.5

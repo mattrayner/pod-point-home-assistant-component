@@ -35,6 +35,7 @@ SERVICE_STOP_CHARGE_NOW = "stop_charge_now"
 CONF_ENABLED = "enabled"
 CONF_EMAIL = "email"
 CONF_PASSWORD = "password"
+CONF_REFRESH_TOKEN = "refresh_token"
 CONF_SCAN_INTERVAL = "scan_interval"
 DEFAULT_SCAN_INTERVAL = 300
 CONF_HTTP_DEBUG = "http_debug"
